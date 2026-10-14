@@ -91,22 +91,63 @@
             .chat-window { width: calc(100vw - 40px); right: 0; height: 60vh; max-height: 400px; }
         }
     </style>
+
+    <style>
+  /* Kompyuterda menyu tugmasini yashirish */
+  @media (min-width: 769px) {
+    .hamburger-btn { display: none; }
+  }
+
+  /* Telefonda tugmani ko'rsatish va chap menyuni yashirish */
+  @media (max-width: 768px) {
+    .hamburger-btn {
+      display: inline-block;
+      font-size: 26px;
+      background: transparent;
+      border: none;
+      color: white; /* Agar Kiber Portal foni oq bo'lsa, color: black; qiling */
+      cursor: pointer;
+      margin-right: 15px;
+    }
+    
+    /* Chap menyuni (Kiber portal yozuvi bor qismni) yashirib turish */
+    .sidebar {
+      position: fixed;
+      left: -100%;
+      top: 0;
+      width: 250px;
+      height: 100vh;
+      transition: all 0.3s ease;
+      z-index: 9999;
+    }
+
+    /* Tugma bosilganda menyu ekranga chiqishi uchun */
+    .sidebar.active {
+      left: 0;
+    }
+  }
+</style>
 </head>
 <body>
     <div id="particles-js"></div>
-    <div class="sidebar">
-        <div class="sidebar-header"><i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> <span data-i18n="portal_name">KIBER PORTAL</span></div>
-        <div class="nav-menu">
-            <a href="/dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> <span data-i18n="nav_dashboard">Bosh panel</span></a>
-            <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span>Statistika (Grafik)</span></a>
-            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-                <a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a>
-            <% } %>
-            <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span data-i18n="nav_settings">Profil Sozlamalari</span></a>
-            <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> <span data-i18n="nav_sessions">Faol Qurilmalar</span></a>
-            <a href="#" class="nav-item" onclick="document.getElementById('contactModal').style.display='flex'"><i class="fas fa-address-book"></i> <span data-i18n="nav_contact">Bog'lanish</span></a>
-        </div>
+    <!-- Mobil uchun menyu ochish tugmasi (Sidebar'dan oldin yoziladi) -->
+<button id="mobile-menu-btn" class="hamburger-btn" style="position: absolute; top: 15px; left: 15px; z-index: 10000;">
+    &#9776;
+</button>
+
+<div class="sidebar">
+    <div class="sidebar-header"><i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> <span data-i18n="portal_name">KIBER PORTAL</span></div>
+    <div class="nav-menu">
+        <a href="/dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> <span data-i18n="nav_dashboard">Bosh panel</span></a>
+        <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span>Statistika (Grafik)</span></a>
+        <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+            <a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a>
+        <% } %>
+        <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span data-i18n="nav_settings">Profil Sozlamalari</span></a>
+        <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> <span data-i18n="nav_sessions">Faol Qurilmalar</span></a>
+        <a href="#" class="nav-item" onclick="document.getElementById('contactModal').style.display='flex'"><i class="fas fa-address-book"></i> <span data-i18n="nav_contact">Bog'lanish</span></a>
     </div>
+</div>
     
     <div class="main-content">
         <div class="header">
@@ -345,5 +386,16 @@
             } 
         }
     </script>
+
+    <script>
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  const sidebar = document.querySelector('.sidebar'); // Bu yerda ham o'zingizdagi menyu nomini tekshiring
+
+  if(menuBtn && sidebar) {
+    menuBtn.addEventListener('click', function() {
+      sidebar.classList.toggle('active');
+    });
+  }
+</script>
 </body>
 </html>
