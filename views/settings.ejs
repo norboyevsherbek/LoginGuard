@@ -6,25 +6,31 @@
     <title>Profil Sozlamalari</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg-body: #0a192f; --bg-sidebar: #112240; --bg-header: #112240; --card-bg: #1e293b; --text-main: #ccd6f6; --text-muted: #8892b0; --accent: #64ffda; --danger: #ef4444; --border-color: #233554; }
+        /* Umumiy Ranglar va O'zgaruvchilar */
+        :root { --bg-body: #0a192f; --bg-sidebar: #112240; --bg-header: #112240; --card-bg: #1e293b; --text-main: #ccd6f6; --text-muted: #8892b0; --accent: #64ffda; --danger: #ef4444; --success: #10b981; --border-color: #233554; }
         body { margin: 0; font-family: sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
         
-        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; }
-        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; }
+        /* KOMPYUTER EKRANI UCHUN MENYU (YON PANEL) */
+        .sidebar { width: 260px; background-color: var(--bg-sidebar) !important; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; }
+        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-header i { color: var(--danger); }
         .nav-menu { display: flex; flex-direction: column; margin-top: 20px; }
-        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); text-decoration: none; border-left: 3px solid transparent; transition: 0.3s; }
-        .nav-item.active, .nav-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); text-decoration: none; font-size: 16px; transition: 0.3s; cursor: pointer; border-left: 3px solid transparent; }
+        .nav-item i { width: 20px; text-align: center; }
+        .nav-item:hover, .nav-item.active { background-color: rgba(100, 255, 218, 0.1); color: var(--accent); border-left-color: var(--accent); }
         
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .header { height: 70px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; z-index: 10; background: transparent; }
+        
+        /* HEADER QISMI */
+        .header { height: 70px; background-color: var(--bg-header) !important; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; transition: 0.3s; }
+        
+        /* SOZLAMALAR FORMASI CSS */
         .content-body { padding: 30px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         .settings-card { background: var(--card-bg); border-radius: 10px; padding: 25px; border: 1px solid var(--border-color); }
-        
         .form-group { margin-bottom: 20px; }
         .form-group label.txt-label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 13px; font-weight: 600; }
         .form-group input.inp-field { width: 100%; padding: 10px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-main); box-sizing: border-box; outline: none; }
         .form-group input.inp-field:focus { border-color: var(--accent); }
-        
         .btn-primary { background: var(--accent); color: var(--bg-body); width: 100%; padding: 12px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; transition: 0.3s; }
         .btn-primary:hover { opacity: 0.8; }
         
@@ -36,37 +42,120 @@
         input:checked + .slider { background-color: rgba(100, 255, 218, 0.2); border: 1px solid var(--accent); }
         input:checked + .slider:before { transform: translateX(24px); background-color: var(--accent); bottom: 3px; }
 
+        /* Kompyuter ekranlarida mobil tugmalarni yashirish */
+        @media (min-width: 769px) {
+            #mobile-menu-btn { display: none !important; }
+            .mobile-only-profile { display: none !important; }
+        }
+
         /* ====================================================
-           MOBIL QURILMALAR UCHUN MAXSUS CSS
+           TELEFON EKRANLARI UCHUN YAKUNIY MOSLASHUV CSS
            ==================================================== */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow-y: auto; }
-            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
-            .sidebar-header { justify-content: center; text-align: center; }
-            .nav-menu { flex-direction: row; overflow-x: auto; margin-top: 0; padding: 5px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-            .nav-item { padding: 10px 15px; border-left: none; border-bottom: 3px solid transparent; }
-            .nav-item.active, .nav-item:hover { border-left-color: transparent; border-bottom-color: var(--accent); }
             
-            .header { height: auto; padding: 15px; flex-direction: column; gap: 10px; align-items: flex-start; }
+            /* Tepadagi ortiqcha tugmalarni yashirish */
+            .header-controls { display: none !important; }
+            .header { padding: 15px; height: auto; }
+            
+            /* YAGONA 3 ta chiziqchali tugma (Ekranda qotib turadigan) */
+            #mobile-menu-btn {
+                display: inline-block !important;
+                position: fixed !important; 
+                top: 15px;
+                right: 20px;
+                font-size: 28px;
+                background: transparent;
+                border: none;
+                color: var(--text-main);
+                z-index: 10001; 
+                cursor: pointer;
+            }
+            
+            /* Menyuni O'NG tomondan chiqarish */
+            .sidebar {
+                position: fixed !important;
+                right: -100% !important; 
+                left: auto !important; 
+                top: 0 !important;
+                width: 280px !important;
+                height: 100vh !important;
+                background-color: var(--bg-sidebar) !important;
+                transition: all 0.3s ease !important;
+                z-index: 10000 !important;
+                box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+                border-right: none;
+            }
+
+            .sidebar.active { right: 0 !important; }
+
+            .nav-menu { display: flex !important; flex-direction: column !important; width: 100% !important; margin-top: 0 !important; padding: 0 !important; }
+            .nav-item { display: flex !important; align-items: center !important; padding: 15px 20px !important; width: 100% !important; box-sizing: border-box !important; border-left: 3px solid transparent !important; border-bottom: none !important; }
+            .nav-item.active, .nav-item:hover { border-left-color: var(--accent) !important; }
+
             .content-body { padding: 15px; }
             .settings-card { padding: 15px; }
         }
     </style>
 </head>
 <body>
+    
+    <!-- MOBIL EKRAN UCHUN YAGONA TUGMA -->
+    <button id="mobile-menu-btn">&#9776;</button>
+
+    <!-- ASOSIY VA YAGONA YON MENYU -->
     <div class="sidebar">
-        <div class="sidebar-header"><i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> KIBER PORTAL</div>
+        <!-- 1. Menyu Sarlavhasi -->
+        <div class="sidebar-header" style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+            <span>
+                <i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> 
+                <span>KIBER PORTAL</span>
+            </span>
+        </div>
+        
+        <!-- 2. Profil rasmi va ism (Faqat telefonda ko'rinadi) -->
+        <div class="mobile-only-profile" style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.15);">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: #2c3e50; display: flex; align-items: center; justify-content: center;">
+                <% if (typeof user !== 'undefined' && user && user.avatar) { %>
+                    <img src="<%= user.avatar %>" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                <% } else { %>
+                    <i class="fas fa-user-shield" style="color: var(--accent); font-size: 22px;"></i>
+                <% } %>
+            </div>
+            <div>
+                <div style="font-weight: bold; color: var(--text-main); font-size: 16px;">
+                    <%= (typeof user !== 'undefined' && user) ? user.username : 'Admin' %>
+                </div>
+                <div style="font-size: 12px; color: var(--accent);">Administrator</div>
+            </div>
+        </div>
+
+        <!-- 3. Bo'limlar ro'yxati -->
         <div class="nav-menu">
             <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> Bosh panel</a>
+            <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> Statistika</a>
+            
+            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+                <a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> Foydalanuvchi qo'shish</a>
+            <% } %>
+            
             <a href="/settings" class="nav-item active"><i class="fas fa-user-cog"></i> Profil Sozlamalari</a>
             <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> Faol Qurilmalar</a>
+            
+            <!-- 4. Chiqish tugmasi -->
+            <a href="/logout" class="nav-item mobile-only-profile" style="color: var(--danger); border-top: 1px solid var(--border-color); margin-top: 10px;">
+                <i class="fas fa-sign-out-alt"></i> Chiqish
+            </a>
         </div>
     </div>
+
+    <!-- ASOSIY QISM -->
     <div class="main-content">
         <div class="header">
             <div style="font-weight: bold;"><i class="fas fa-lock" style="color:#8b5cf6;"></i> LoginGuard Platformasi</div>
-            <a href="/dashboard" style="color:var(--accent); text-decoration:none; font-weight: bold;"><i class="fas fa-arrow-left"></i> Ortga qaytish</a>
+            <a href="/dashboard" class="header-controls" style="color:var(--accent); text-decoration:none; font-weight: bold;"><i class="fas fa-arrow-left"></i> Ortga qaytish</a>
         </div>
+        
         <div class="content-body">
             <h1 style="margin-top:0;">Profil Sozlamalari</h1>
             <div class="settings-card">
@@ -181,7 +270,6 @@
             }
 
             let strength = 0;
-            
             if (password.length >= 6) strength += 1; 
             if (password.match(/(?=.*[0-9])/)) strength += 1; 
             if (password.match(/(?=.*[a-z])(?=.*[A-Z])/)) strength += 1; 
@@ -203,6 +291,26 @@
                 text.innerText = "Kuchli";
                 text.style.color = "var(--success)";
             }
+        }
+
+        // ==========================================
+        // MOBIL MENYUNI OCHISH/YOPISH UCHUN SCRIPT
+        // ==========================================
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if(menuBtn && sidebar) {
+            menuBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Bosilish orqaga o'tib ketmasligi uchun
+                sidebar.classList.toggle('active');
+            });
+            
+            // Menyudan tashqariga bosilganda uni avtomatik yopish
+            document.addEventListener('click', function(e) {
+                if(sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== menuBtn) {
+                    sidebar.classList.remove('active');
+                }
+            });
         }
     </script>
 </body>

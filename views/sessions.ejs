@@ -7,25 +7,32 @@
     <title data-i18n="title_settings">Faol Sessiyalar - Kiberxavfsizlik Portali</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230f172a' d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/><path fill='%2364ffda' d='M12 7c-1.1 0-2 .9-2 2v1H9v6h6v-6h-1V9c0-1.1-.9-2-2-2zm0 1.5c.28 0 .5.22.5.5v1h-1V9c0-.28.22-.5.5-.5z'/></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
+        /* Umumiy Ranglar va O'zgaruvchilar */
         :root { --bg-body: #0a192f; --bg-sidebar: #112240; --bg-header: #112240; --card-bg: #1e293b; --text-main: #ccd6f6; --text-muted: #8892b0; --accent: #64ffda; --danger: #ef4444; --success: #10b981; --border-color: #233554; }
         [data-theme="light"] { --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-header: #ffffff; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --accent: #3b82f6; --danger: #ef4444; --success: #10b981; --border-color: #e2e8f0; }
+        
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
         #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
         
-        .sidebar { width: 260px; background-color: rgba(17, 34, 64, 0.95) !important; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; z-index: 10; }
+        /* KOMPYUTER EKRANI UCHUN MENYU (YON PANEL) */
+        .sidebar { width: 260px; background-color: rgba(17, 34, 64, 0.95) !important; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; }
         [data-theme="light"] .sidebar { background-color: rgba(255, 255, 255, 0.95) !important; }
         .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); }
         .sidebar-header i { color: var(--danger); }
-        .nav-menu { list-style: none; padding: 0; margin: 20px 0; display: flex; flex-direction: column; gap: 5px; }
-        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); text-decoration: none; font-size: 15px; transition: 0.3s; cursor: pointer; border-left: 3px solid transparent; }
+        .nav-menu { display: flex; flex-direction: column; margin-top: 20px; }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); text-decoration: none; font-size: 16px; transition: 0.3s; cursor: pointer; border-left: 3px solid transparent; }
+        .nav-item i { width: 20px; text-align: center; }
         .nav-item:hover, .nav-item.active { background-color: rgba(100, 255, 218, 0.1); color: var(--accent); border-left-color: var(--accent); }
         [data-theme="light"] .nav-item:hover, [data-theme="light"] .nav-item.active { background-color: rgba(59, 130, 246, 0.1); }
         
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; z-index: 10; background: transparent; }
+        
+        /* HEADER QISMI */
         .header { height: 70px; background-color: rgba(17, 34, 64, 0.95) !important; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; transition: 0.3s; }
         [data-theme="light"] .header { background-color: rgba(255, 255, 255, 0.95) !important; }
-        .header-title { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text-main); }
+        .header-title { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text-main); font-size: 16px; }
         .header-title i { color: #8b5cf6; }
         .header-controls { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
         .btn, select { padding: 8px 15px; border-radius: 5px; border: none; font-size: 14px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-weight: 500; }
@@ -35,15 +42,16 @@
         .user-profile { display: flex; align-items: center; gap: 10px; padding: 5px 15px; background-color: rgba(100, 255, 218, 0.1); border-radius: 20px; color: var(--accent); font-weight: 600; }
         [data-theme="light"] .user-profile { background-color: rgba(59, 130, 246, 0.1); }
         
+        /* ASOSIY KONTENT UCHUN DIZAYN */
         .content-body { padding: 30px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         .page-header { margin-bottom: 30px; }
         .page-header h1 { margin: 0 0 10px 0; font-size: 24px; color: var(--text-main); }
         .page-header p { margin: 0; color: var(--text-muted); font-size: 14px; }
         .settings-card { background-color: var(--card-bg); border-radius: 10px; padding: 25px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 25px; }
-        
         .success { color: var(--success); font-size: 14px; margin-bottom: 15px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;}
+        /* MODAL, CHAT QISMI */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;}
         .modal-content { background: var(--card-bg); padding: 30px; border-radius: 10px; border: 1px solid var(--accent); width: 100%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
         .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; color: var(--text-main); cursor: pointer; transition: 0.3s; }
         .close-btn:hover { color: var(--danger); }
@@ -69,20 +77,74 @@
         .chat-input button { background: var(--accent); color: var(--bg-body); border: none; padding: 8px 12px; margin-left: 5px; border-radius: 3px; cursor: pointer; transition: 0.3s; }
         .chat-input button:hover { background: white; }
 
+        /* Kompyuter ekranlarida mobil tugmalarni yashirish */
+        @media (min-width: 769px) {
+            #mobile-menu-btn { display: none !important; }
+            .mobile-only-profile { display: none !important; }
+        }
+
         /* ====================================================
-           MOBIL QURILMALAR UCHUN MAXSUS CSS
+           TELEFON EKRANLARI UCHUN YAKUNIY MOSLASHUV CSS
            ==================================================== */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow-y: auto; }
-            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
-            .sidebar-header { justify-content: center; }
-            .nav-menu { flex-direction: row; overflow-x: auto; margin: 0; padding: 5px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-            .nav-item { padding: 10px 15px; border-left: none; border-bottom: 3px solid transparent; }
-            .nav-item.active, .nav-item:hover { border-left-color: transparent; border-bottom-color: var(--accent); }
             
-            .header { height: auto; padding: 15px; flex-direction: column; gap: 15px; align-items: flex-start; }
-            .header-controls { width: 100%; justify-content: space-between; }
+            /* Tepadagi ortiqcha tugmalarni yashirish */
+            .header-controls { display: none !important; }
+            .header { padding: 15px; height: auto; }
             
+            /* YAGONA 3 ta chiziqchali tugma (Ekranda qotib turadigan) */
+            #mobile-menu-btn {
+                display: inline-block !important;
+                position: fixed !important; /* Tugma pastga tushganda ham joyida qolishi uchun fix qilindi */
+                top: 15px;
+                right: 20px;
+                font-size: 28px;
+                background: transparent;
+                border: none;
+                color: var(--text-main);
+                z-index: 10001; 
+                cursor: pointer;
+            }
+            
+            /* Menyuni O'NG tomondan chiqarish */
+            .sidebar {
+                position: fixed !important;
+                right: -100% !important; /* Yashiringan */
+                left: auto !important; 
+                top: 0 !important;
+                width: 280px !important;
+                height: 100vh !important;
+                background-color: var(--bg-sidebar) !important;
+                transition: all 0.3s ease !important;
+                z-index: 10000 !important;
+                box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+                border-right: none;
+            }
+
+            .sidebar.active { right: 0 !important; /* Bosilganda ochiladi */ }
+
+            /* Yozuvlarni aniq tagma-tag qilish */
+            .nav-menu {
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100% !important;
+                margin-top: 0 !important;
+                padding: 0 !important;
+            }
+
+            .nav-item {
+                display: flex !important;
+                align-items: center !important;
+                padding: 15px 20px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                border-left: 3px solid transparent !important;
+                border-bottom: none !important;
+            }
+            
+            .nav-item.active, .nav-item:hover { border-left-color: var(--accent) !important; }
+
             .content-body { padding: 15px; }
             .settings-card { padding: 15px; }
             .settings-card li { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -93,19 +155,64 @@
 </head>
 <body>
     <div id="particles-js"></div>
+    
+    <!-- MOBIL EKRAN UCHUN YAGONA TUGMA (O'NG TOMONDA VA QOTIRILGAN) -->
+    <button id="mobile-menu-btn">&#9776;</button>
+
+    <!-- ASOSIY VA YAGONA YON MENYU -->
     <div class="sidebar">
-        <div class="sidebar-header"><i class="fas fa-shield-halved"></i> <span data-i18n="portal_name">KIBER PORTAL</span></div>
-        <ul class="nav-menu">
+        <!-- 1. Menyu Sarlavhasi -->
+        <div class="sidebar-header" style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+            <span>
+                <i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> 
+                <span data-i18n="portal_name">KIBER PORTAL</span>
+            </span>
+        </div>
+        
+        <!-- 2. Profil rasmi va ism (Faqat telefonda ko'rinadi) -->
+        <div class="mobile-only-profile" style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.15);">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: #2c3e50; display: flex; align-items: center; justify-content: center;">
+                <% if (typeof user !== 'undefined' && user && user.avatar) { %>
+                    <img src="<%= user.avatar %>" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                <% } else { %>
+                    <i class="fas fa-user-shield" style="color: var(--accent); font-size: 22px;"></i>
+                <% } %>
+            </div>
+            <div>
+                <div style="font-weight: bold; color: var(--text-main); font-size: 16px;">
+                    <%= (typeof user !== 'undefined' && user) ? user.username : 'Admin' %>
+                </div>
+                <div style="font-size: 12px; color: var(--accent);">Administrator</div>
+            </div>
+        </div>
+
+        <!-- 3. Bo'limlar ro'yxati -->
+        <div class="nav-menu">
             <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> <span data-i18n="nav_dashboard">Bosh panel</span></a>
+            <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span>Statistika</span></a>
+            
+            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+                <a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a>
+            <% } %>
+            
             <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span data-i18n="nav_settings">Profil Sozlamalari</span></a>
             <a href="/sessions" class="nav-item active"><i class="fas fa-laptop-house"></i> <span data-i18n="nav_sessions">Faol Qurilmalar</span></a>
-            <a href="#" class="nav-item" onclick="openContactModal()"><i class="fas fa-address-book"></i> <span data-i18n="nav_contact">Admin bilan bog'lanish</span></a>
-        </ul>
+            <a href="#" class="nav-item" onclick="openContactModal()"><i class="fas fa-address-book"></i> <span data-i18n="nav_contact">Bog'lanish</span></a>
+            
+            <!-- 4. Chiqish tugmasi (Telefonda eng pastda chiqadi) -->
+            <a href="/logout" class="nav-item mobile-only-profile" style="color: var(--danger); border-top: 1px solid var(--border-color); margin-top: 10px;">
+                <i class="fas fa-sign-out-alt"></i> <span>Chiqish</span>
+            </a>
+        </div>
     </div>
 
+    <!-- ASOSIY QISM -->
     <div class="main-content">
         <div class="header">
-            <div class="header-title"><i class="fas fa-lock"></i> <span data-i18n="platform_title">LoginGuard Platformasi</span></div>
+            <div class="header-title">
+                <i class="fas fa-lock" style="color:#8b5cf6;"></i> <span data-i18n="platform_title">LoginGuard Platformasi</span>
+            </div>
+            <!-- KOMPYUTER EKRANI UCHUN YUQORI TUGMALAR -->
             <div class="header-controls">
                 <i class="fas fa-moon" id="themeIcon" style="cursor: pointer; font-size: 20px; color: var(--text-muted);" onclick="toggleTheme()"></i>
                 <select id="languageSelect" onchange="changeLanguage(this.value)">
@@ -113,7 +220,7 @@
                     <option value="en">ENG</option>
                     <option value="ru">RUS</option>
                 </select>
-               <div class="user-profile">
+                <div class="user-profile">
                     <% if (typeof user !== 'undefined' && user.avatar) { %>
                         <img src="<%= user.avatar %>" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); margin-right: 5px;">
                     <% } else { %>
@@ -250,6 +357,26 @@
             if (inputField.value.trim() !== "") { socket.emit('chatMessage', inputField.value.trim()); inputField.value = ''; }
         }
         function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+
+        // ==========================================
+        // MOBIL MENYUNI OCHISH/YOPISH UCHUN SCRIPT
+        // ==========================================
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if(menuBtn && sidebar) {
+            menuBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Bosilish orqaga o'tib ketmasligi uchun
+                sidebar.classList.toggle('active');
+            });
+            
+            // Menyudan tashqariga bosilganda uni avtomatik yopish
+            document.addEventListener('click', function(e) {
+                if(sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== menuBtn) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        }
     </script>
 </body>
 </html>
