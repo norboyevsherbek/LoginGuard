@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <!-- MOBIL UCHUN MUHIM QATOR -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Foydalanuvchi Qo'shish</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg-body: #0a192f; --bg-sidebar: #112240; --card-bg: #1e293b; --text-main: #ccd6f6; --text-muted: #8892b0; --accent: #64ffda; --success: #10b981; --border-color: #233554; --danger: #ef4444; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
+        
+        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; z-index: 10; }
+        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; }
+        .nav-menu { display: flex; flex-direction: column; margin-top: 20px; }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); text-decoration: none; border-left: 3px solid transparent; transition: 0.3s; }
+        .nav-item.active, .nav-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        
+        .main-content { flex: 1; padding: 40px; display: flex; justify-content: center; align-items: flex-start; overflow-y: auto; box-sizing: border-box; }
+        .form-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 30px; width: 100%; max-width: 500px; box-sizing: border-box; }
+        
+        input, select { width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 20px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); box-sizing: border-box; outline: none; }
+        input:focus, select:focus { border-color: var(--accent); }
+        .btn-submit { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid var(--success); padding: 12px 20px; font-weight: bold; cursor: pointer; border-radius: 6px; width: 100%; transition: 0.3s; }
+        .btn-submit:hover { background: var(--success); color: white; }
+
+        /* ====================================================
+           MOBIL QURILMALAR UCHUN MAXSUS CSS
+           ==================================================== */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .sidebar-header { justify-content: center; text-align: center; }
+            .nav-menu { flex-direction: row; overflow-x: auto; margin-top: 0; padding: 5px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+            .nav-item { padding: 10px 15px; border-left: none; border-bottom: 3px solid transparent; }
+            .nav-item.active, .nav-item:hover { border-left-color: transparent; border-bottom-color: var(--accent); }
+            
+            .main-content { padding: 20px; align-items: flex-start; }
+            .form-card { padding: 20px; }
+            h2 { font-size: 20px; margin-top: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header"><i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> <span>KIBER PORTAL</span></div>
+        <div class="nav-menu">
+            <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> <span>Bosh panel</span></a>
+            <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span>Statistika (Grafik)</span></a>
+            <a href="/admin/add-user" class="nav-item active"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a>
+            <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span>Profil Sozlamalari</span></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="form-card">
+            <h2 style="margin-top: 0; margin-bottom: 25px;"><i class="fas fa-user-plus" style="color: var(--accent);"></i> Yangi foydalanuvchi</h2>
+            
+            <% if (typeof error !== 'undefined' && error) { %> <div style="color:var(--danger); margin-bottom:15px; font-size: 14px;"><i class="fas fa-exclamation-triangle"></i> <%= error %></div> <% } %>
+            <% if (typeof success !== 'undefined' && success) { %> <div style="color:var(--success); margin-bottom:15px; font-size: 14px;"><i class="fas fa-check-circle"></i> <%= success %></div> <% } %>
+
+            <form action="/admin/add-user" method="POST">
+                <label style="color: var(--text-muted); font-size: 14px; font-weight: bold;">Foydalanuvchi nomi (Username):</label>
+                <input type="text" name="username" placeholder="Yangi login..." required>
+
+                <label style="color: var(--text-muted); font-size: 14px; font-weight: bold;">Parol:</label>
+                <!-- PAROL KO'ZCHASI UCHUN DIV -->
+                <div style="position: relative; width: 100%;">
+                    <input type="password" name="password" id="newUserPassword" placeholder="Yangi parol..." required style="padding-right: 40px;">
+                    <i class="fas fa-eye" id="toggleNewUserPassword" onclick="togglePasswordVisibility('newUserPassword', 'toggleNewUserPassword')" style="position: absolute; right: 15px; top: 40%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; transition: 0.3s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'"></i>
+                </div>
+
+                <label style="color: var(--text-muted); font-size: 14px; font-weight: bold;">Roli (Huquqi):</label>
+                <select name="role">
+                    <option value="user">Foydalanuvchi (User)</option>
+                    <option value="admin">Administrator (Admin)</option>
+                </select>
+
+                <button type="submit" class="btn-submit"><i class="fas fa-plus"></i> Qo'shish</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Parolni ko'rsatish/yashirish (Ko'zcha) funksiyasi
+        function togglePasswordVisibility(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+                toggleIcon.style.color = 'var(--accent)';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+                toggleIcon.style.color = 'var(--text-muted)';
+            }
+        }
+    </script>
+</body>
+</html>

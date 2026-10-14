@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>LoginGuard - Kirish</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230f172a' d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/><path fill='%23ef4444' d='M12 7c-1.1 0-2 .9-2 2v1H9v6h6v-6h-1V9c0-1.1-.9-2-2-2zm0 1.5c.28 0 .5.22.5.5v1h-1V9c0-.28.22-.5.5-.5z'/></svg>">
+<style>
+        :root { --primary: #f4f6f9; --secondary: #ffffff; --accent: #3b82f6; --text: #334155; --border: #e2e8f0; }
+        [data-theme="dark"] { --primary: #0a192f; --secondary: #112240; --accent: #64ffda; --text: #ccd6f6; --border: #64ffda; }
+        
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--primary); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; transition: 0.3s;}
+        
+        .theme-toggle { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; color: var(--text); cursor: pointer; transition: 0.3s;}
+        .theme-toggle:hover { color: var(--accent); transform: scale(1.1); }
+
+        .container { background: var(--secondary); padding: 40px; border-radius: 10px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid var(--border); transition: 0.3s; box-sizing: border-box; }
+        h2 { color: var(--accent); margin-bottom: 25px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border); border-radius: 5px; background: var(--primary); color: var(--text); outline: none; box-sizing: border-box; }
+        button[type="submit"] { width: 100%; padding: 12px; background: transparent; color: var(--accent); border: 1px solid var(--accent); font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 15px; transition: 0.3s; }
+        button[type="submit"]:hover { background: rgba(100,255,218,0.1); }
+        .error { color: #ff6b6b; font-size: 14px; margin-bottom: 10px; }
+        .success { color: var(--accent); font-size: 14px; margin-bottom: 10px; }
+        .toggle-btn { border: none; background: none; font-size: 14px; color: #8892b0; margin-top: 20px; text-decoration: underline; cursor: pointer;}
+        .toggle-btn:hover { color: var(--accent); }
+
+        /* LIVE CHAT STYLING */
+        .chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 999; }
+        .chat-button { width: 60px; height: 60px; background: var(--accent); border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.3s; display: flex; justify-content: center; align-items: center; color: var(--primary); font-size: 24px;}
+        .chat-window { display: none; position: absolute; bottom: 70px; right: 0; width: 320px; height: 400px; background: var(--secondary); border: 1px solid var(--accent); border-radius: 10px; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+        .chat-header { background: var(--accent); padding: 15px; color: var(--primary); font-weight: bold; text-align: center; display: flex; justify-content: space-between; align-items: center;}
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 8px 12px; border-radius: 8px; font-size: 14px; max-width: 85%; word-wrap: break-word;}
+        .msg-other { background: var(--primary); align-self: flex-start; border-left: 2px solid var(--accent); }
+        .msg-me { background: var(--accent); color: var(--primary); align-self: flex-end; }
+        .msg-admin { background: #ef4444; color: white; align-self: flex-start; border-left: 2px solid white; }
+        .chat-input { display: flex; padding: 10px; background: var(--primary); border-top: 1px solid var(--border); }
+        .chat-input input { flex: 1; padding: 8px; border: none; border-radius: 3px; background: var(--secondary); color: var(--text); outline: none; margin:0;}
+        .chat-input button { background: var(--accent); color: var(--primary); border: none; padding: 8px 12px; margin-left: 5px; border-radius: 3px; cursor: pointer; font-weight: bold; width:auto; margin-top:0;}
+
+        #particles-js { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; overflow: hidden;}
+        .container { position: relative; z-index: 10; }
+        .theme-toggle { z-index: 10; }
+        .chat-widget { z-index: 999; }
+
+        /* ====================================================
+           BRAUZER KO'ZCHASINI O'CHIRISH UCHUN QO'SHILGAN KOD
+           ==================================================== */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none !important;
+        }
+
+        input[type="password"]::-webkit-contacts-auto-fill-button, 
+        input[type="password"]::-webkit-credentials-auto-fill-button {
+            visibility: hidden;
+            display: none !important;
+            pointer-events: none;
+        }
+
+        /* ====================================================
+           TELEFON VA PLANSCHETLAR UCHUN MAXSUS KODLAR
+           ==================================================== */
+        @media (max-width: 480px) {
+            .container { 
+                padding: 30px 20px; 
+            }
+            .chat-window { 
+                width: calc(100vw - 40px); 
+                height: 60vh; 
+                max-height: 400px;
+                right: 0; 
+                bottom: 80px; 
+            }
+            .theme-toggle {
+                top: 15px;
+                right: 15px;
+                font-size: 20px;
+            }
+        }
+</style>
+</head>
+<body>
+    <div id="particles-js"></div> 
+    <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+
+    <% if (locals.requires2FA) { %>
+        <!-- 2FA TASDIQLASH FORMASI -->
+        <div class="container" id="twoFAForm">
+            <h2><i class="fas fa-shield-alt"></i> 2FA Tasdiqlash</h2>
+            <% if (error) { %> <div class="error"><%= error %></div> <% } %>
+            <% if (success) { %> <div class="success"><%= success %></div> <% } %>
+            
+            <p style="font-size: 13px; color: var(--text); margin-bottom: 20px;">
+                Telegram botingizga yuborilgan 6 xonali himoya kodini kiriting.
+            </p>
+            
+            <form action="/verify-2fa" method="POST">
+                <input type="text" name="otp" placeholder="Masalan: 123456" required autocomplete="off" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;">
+                <button type="submit" style="margin-top: 20px;">Tasdiqlash</button>
+            </form>
+            
+            <button class="toggle-btn" onclick="window.location.href='/login'">Bekor qilish va ortga</button>
+        </div>
+    <% } else { %>
+        <!-- ASOSIY LOGIN FORMASI -->
+        <div class="container" id="loginForm">
+            <h2>LoginGuard</h2>
+            <% if (error) { %> <div class="error"><%= error %></div> <% } %>
+            <% if (success) { %> <div class="success"><%= success %></div> <% } %>
+            
+            <form id="mainLoginForm" action="/login" method="POST">
+                <input type="text" name="username" id="username" placeholder="Login" required autocomplete="username" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--accent); background: transparent; color: var(--text); outline: none;">
+                
+                <div style="position: relative; width: 100%; margin-bottom: 10px;">
+                    <input type="password" name="password" id="password" placeholder="Parol" required autocomplete="current-password" style="width: 100%; padding: 12px; padding-right: 40px; border-radius: 6px; border: 1px solid var(--accent); background: transparent; color: var(--text); outline: none; box-sizing: border-box;">
+                    
+                    <i class="fas fa-eye" id="togglePasswordIcon" onclick="togglePasswordVisibility('password', 'togglePasswordIcon')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; font-size: 16px; transition: 0.3s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'"></i>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 13px;">
+                    <label style="color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" name="remember" id="remember" style="cursor: pointer; accent-color: var(--accent);">
+                        Eslab qolish
+                    </label>
+                    
+                    <a href="#" onclick="showForgotForm()" style="color: var(--accent); text-decoration: none;">Parolni unutdingizmi?</a>
+                </div>
+
+                <button type="submit" style="width: 100%; padding: 12px; background: rgba(100,255,218,0.1); color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s;">
+                    Tizimga kirish
+                </button>
+            </form>
+
+            <button class="toggle-btn" onclick="document.getElementById('loginForm').style.display='none'; document.getElementById('registerForm').style.display='block';">Ro'yxatdan o'tish</button>
+        </div>
+
+        <!-- REGISTER FORMASI -->
+        <div class="container" id="registerForm" style="display:none;">
+            <h2>Yangi Profil</h2>
+            <form action="/register" method="POST">
+                <input type="text" name="username" placeholder="Yangi login" required style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--accent); background: transparent; color: var(--text); outline: none;">
+                
+                <div style="position: relative; width: 100%; margin-bottom: 15px;">
+                    <input type="password" name="password" id="regPassword" placeholder="Yangi parol" required style="width: 100%; padding: 12px; padding-right: 40px; border-radius: 6px; border: 1px solid var(--accent); background: transparent; color: var(--text); outline: none; box-sizing: border-box;">
+                    <i class="fas fa-eye" id="toggleRegPasswordIcon" onclick="togglePasswordVisibility('regPassword', 'toggleRegPasswordIcon')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; font-size: 16px; transition: 0.3s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'"></i>
+                </div>
+
+                <button type="submit">Saqlash</button>
+            </form>
+            <button class="toggle-btn" onclick="document.getElementById('registerForm').style.display='none'; document.getElementById('loginForm').style.display='block';">Ortga qaytish</button>
+        </div>
+
+        <!-- PAROLNI TIKLASH FORMASI -->
+        <div class="container" id="forgotForm" style="display:none;">
+            <h2>Parolni tiklash</h2>
+            <p style="font-size: 13px; color: var(--text); margin-bottom: 10px;">
+                Loginingizni kiriting. Tizim siz uchun yangi vaqtinchalik parol yaratadi va uni Telegramingizga jo'natadi. 
+            </p>
+            <div style="margin-bottom: 20px; border: 1px solid var(--accent); padding: 12px; border-radius: 5px; background: rgba(100, 255, 218, 0.05);">
+                <p style="font-size: 13px; color: var(--text); margin: 0 0 8px 0;">Parolingizni bilish uchun botimizga yozing:</p>
+                <a href="https://t.me/<%= typeof botUsername !== 'undefined' ? botUsername.replace('@', '') : '' %>" target="_blank" style="color: var(--accent); font-size: 16px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fab fa-telegram" style="font-size: 20px;"></i> <%= typeof botUsername !== 'undefined' ? botUsername : '@loginguardbot' %>
+                </a>
+            </div>
+            <div id="forgotMessage" style="font-size: 14px; margin-bottom: 10px; font-weight: bold;"></div>
+            <input type="text" id="forgotUsername" placeholder="Loginingizni kiriting" required>
+            <button type="button" onclick="sendForgotPassword()" style="width: 100%; padding: 12px; background: transparent; color: var(--accent); border: 1px solid var(--accent); font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; transition: 0.3s;">Kodni yuborish</button>
+            <button class="toggle-btn" onclick="document.getElementById('forgotForm').style.display='none'; document.getElementById('loginForm').style.display='block';">Ortga qaytish</button>
+        </div>
+    <% } %>
+
+    <!-- Live Chat Widget -->
+    <div class="chat-widget">
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <span>Jonli Yordam</span>
+                <i class="fas fa-times" style="cursor: pointer;" onclick="toggleChat()"></i>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Xabarlar shu yerga tushadi -->
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Xabar yozing..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button class="chat-button" onclick="toggleChat()"><i class="fas fa-comments"></i></button>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // PAROLNI KO'RISH/YASHIRISH FUNKSIYASI
+        function togglePasswordVisibility(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+                toggleIcon.style.color = 'var(--accent)';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+                toggleIcon.style.color = 'var(--text-muted)';
+            }
+        }
+
+        // ESLAB QOLISH FUNKSIYASI (LocalStorage)
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginInput = document.getElementById('username');
+            const rememberCb = document.getElementById('remember');
+            const loginForm = document.getElementById('mainLoginForm');
+
+            if (loginInput && rememberCb && localStorage.getItem('savedUsername')) {
+                loginInput.value = localStorage.getItem('savedUsername');
+                rememberCb.checked = true;
+            }
+
+            if (loginForm) {
+                loginForm.addEventListener('submit', () => {
+                    if (rememberCb.checked) {
+                        localStorage.setItem('savedUsername', loginInput.value);
+                    } else {
+                        localStorage.removeItem('savedUsername');
+                    }
+                });
+            }
+        });
+
+        // Mavzu mantig'i
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            document.querySelector('.theme-toggle i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        function toggleTheme() { setTheme(localStorage.getItem('theme') === 'dark' ? 'light' : 'dark'); }
+        setTheme(localStorage.getItem('theme') || 'dark');
+
+        // Socket.io Chat mantig'i
+        const socket = io();
+        let isChatOpen = false;
+
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            isChatOpen = !isChatOpen;
+            chatWindow.style.display = isChatOpen ? 'flex' : 'none';
+        }
+
+        socket.on('message', (data) => {
+            const chatMessages = document.getElementById('chatMessages');
+            let msgClass = 'msg-other';
+            if(data.role === 'admin') msgClass = 'msg-admin';
+            
+            chatMessages.innerHTML += `<div class="msg ${msgClass}"><b>${data.username}:</b> <br> ${data.text}</div>`;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        function sendMessage() {
+            const inputField = document.getElementById('chatInput');
+            if (inputField.value.trim() !== "") {
+                socket.emit('chatMessage', inputField.value.trim());
+                inputField.value = '';
+            }
+        }
+        function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // Animatsiya sozlamalari (Tarmoq uslubi)
+        function loadParticles(color) {
+            particlesJS("particles-js", {
+                "particles": {
+                    "number": { "value": window.innerWidth < 600 ? 30 : 80, "density": { "enable": true, "value_area": 800 } }, // Telefonda zarralar soni kamayadi
+                    "color": { "value": color },
+                    "shape": { "type": "circle" },
+                    "opacity": { "value": 0.5, "random": false },
+                    "size": { "value": 3, "random": true },
+                    "line_linked": { "enable": true, "distance": 150, "color": color, "opacity": 0.4, "width": 1 },
+                    "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+                    "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 } }, "push": { "particles_nb": 4 } }
+                },
+                "retina_detect": true
+            });
+        }
+
+        // Mavzuga qarab animatsiya rangini almashtirish
+        function updateParticlesColor() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const pColor = isDark ? "#64ffda" : "#3b82f6";
+            loadParticles(pColor);
+        }
+
+        setTimeout(updateParticlesColor, 100); 
+
+        const originalToggleTheme = toggleTheme;
+        toggleTheme = function() {
+            originalToggleTheme();
+            updateParticlesColor();
+        }
+
+        // PAROLNI TIKLASH FUNKSIYALARI
+        function showForgotForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotForm').style.display = 'block';
+            document.getElementById('forgotMessage').innerText = '';
+        }
+
+        async function sendForgotPassword() {
+            const usernameInput = document.getElementById('forgotUsername').value;
+            if(!usernameInput) return alert("Loginingizni kiriting!");
+            
+            const msgDiv = document.getElementById('forgotMessage');
+            msgDiv.innerText = "So'rov tekshirilmoqda...";
+            msgDiv.style.color = "var(--text)";
+
+            try {
+                const res = await fetch('/forgot-password', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username: usernameInput })
+                });
+                const data = await res.json();
+                
+                msgDiv.innerText = data.message;
+                msgDiv.style.color = data.success ? 'var(--accent)' : '#ff6b6b';
+                
+                if(data.success && data.redirectUrl) {
+                    setTimeout(() => {
+                        window.open(data.redirectUrl, "_blank");
+                    }, 1500);
+                }
+            } catch (err) {
+                msgDiv.innerText = "Xatolik yuz berdi. Serverga ulanib bo'lmadi.";
+                msgDiv.style.color = '#ff6b6b';
+            }
+        }
+    </script>
+</body>
+</html>

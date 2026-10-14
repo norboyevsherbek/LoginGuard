@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <!-- MOBIL UCHUN MUHIM QATOR -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LoginGuard - Kiberxavfsizlik</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230f172a' d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/><path fill='%2364ffda' d='M12 7c-1.1 0-2 .9-2 2v1H9v6h6v-6h-1V9c0-1.1-.9-2-2-2zm0 1.5c.28 0 .5.22.5.5v1h-1V9c0-.28.22-.5.5-.5z'/></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0a192f;
+            --secondary: #112240;
+            --accent: #64ffda;
+            --text-main: #ccd6f6;
+            --text-muted: #8892b0;
+        }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--primary); color: var(--text-main); scroll-behavior: smooth; overflow-x: hidden; }
+        #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
+        
+        header { background-color: rgba(10, 25, 47, 0.95); padding: 20px 50px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-bottom: 1px solid rgba(100, 255, 218, 0.1); backdrop-filter: blur(5px); }
+        .logo { font-size: 24px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.3s; }
+        .logo i { color: var(--accent); }
+        .logo:hover { transform: scale(1.05); }
+        
+        nav a { color: var(--text-main); text-decoration: none; margin: 0 15px; font-size: 16px; transition: 0.3s; }
+        nav a:hover { color: var(--accent); text-shadow: 0 0 8px rgba(100, 255, 218, 0.5); }
+        
+        .hero { text-align: center; padding: 120px 20px; }
+        .hero h1 { font-size: 48px; margin-bottom: 20px; transition: 0.3s; }
+        .hero h1:hover { color: var(--accent); }
+        .hero p { font-size: 20px; color: var(--text-muted); max-width: 600px; margin: 0 auto 40px auto; }
+        .btn { background: transparent; color: var(--accent); border: 2px solid var(--accent); padding: 15px 35px; font-size: 18px; font-weight: bold; border-radius: 5px; cursor: pointer; text-decoration: none; transition: all 0.3s ease; display: inline-block; }
+        .btn:hover { background: rgba(100, 255, 218, 0.1); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(100, 255, 218, 0.2); }
+        
+        .section { padding: 80px 50px; text-align: center; background: rgba(17, 34, 64, 0.7); border-top: 1px solid rgba(100,255,218,0.1); }
+        .card-container { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 40px; }
+        .card { background-color: var(--primary); padding: 30px; border-radius: 10px; width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.3s, box-shadow 0.3s; border: 1px solid rgba(255,255,255,0.05); box-sizing: border-box; }
+        .card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(100, 255, 218, 0.15); border: 1px solid var(--accent); }
+        .card h3 { color: var(--accent); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        .contact-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-width: 550px; margin: 0 auto; }
+        .contact-item { padding: 12px 20px; border-radius: 5px; transition: 0.3s; cursor: pointer; background: rgba(0,0,0,0.2); border: 1px solid transparent; text-align: left; font-size: 16px; }
+        .contact-item:hover { color: var(--accent); transform: scale(1.05); background: rgba(100,255,218,0.05); border: 1px solid var(--accent); }
+        .contact-item a { color: inherit; text-decoration: none; }
+        
+        /* Chat CSS */
+        .chat-widget { position: fixed; bottom: 30px; right: 30px; z-index: 9999; }
+        .chat-button { width: 60px; height: 60px; background-color: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.4); transition: 0.3s; border: none; color: var(--primary); font-size: 24px; }
+        .chat-button:hover { transform: scale(1.1); box-shadow: 0 5px 20px var(--accent); }
+        .chat-window { display: none; position: absolute; bottom: 80px; right: 0; width: 320px; height: 450px; background-color: var(--secondary); border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 1px solid var(--accent); flex-direction: column; overflow: hidden; transition: all 0.3s ease; }
+        .chat-header { background-color: var(--accent); padding: 15px; text-align: center; font-weight: bold; color: var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        .chat-header i.close-chat { cursor: pointer; transition: 0.3s; }
+        .chat-header i.close-chat:hover { transform: scale(1.2); }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.2); }
+        .message { max-width: 80%; padding: 10px 12px; border-radius: 8px; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+        .msg-admin { background-color: #ef4444; align-self: flex-start; color: white; border-bottom-left-radius: 0; }
+        .msg-user { background-color: var(--accent); color: var(--primary); align-self: flex-end; border-bottom-right-radius: 0; }
+        .msg-other { background-color: var(--primary); color: var(--text-main); align-self: flex-start; border-left: 2px solid var(--accent); border-bottom-left-radius: 0; }
+        .chat-input { display: flex; padding: 10px; background-color: var(--primary); border-top: 1px solid rgba(100,255,218,0.2); }
+        .chat-input input { flex: 1; padding: 10px; border: none; border-radius: 5px; background-color: var(--secondary); color: white; outline: none; }
+        .chat-input button { background-color: var(--accent); color: var(--primary); border: none; padding: 10px 15px; margin-left: 10px; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .chat-input button:hover { background-color: white; transform: scale(1.05); }
+
+        /* ====================================================
+           MOBIL QURILMALAR UCHUN MAXSUS CSS
+           ==================================================== */
+        @media (max-width: 768px) {
+            header { padding: 15px 20px; flex-direction: column; gap: 15px; }
+            nav a { margin: 0 10px; font-size: 14px; }
+            
+            .hero { padding: 80px 20px; }
+            .hero h1 { font-size: 32px; }
+            .hero p { font-size: 16px; }
+            
+            .section { padding: 50px 20px; }
+            .card { width: 100%; max-width: 350px; }
+            
+            .contact-info { grid-template-columns: 1fr; max-width: 300px; }
+            .contact-item { width: 100%; box-sizing: border-box; }
+            
+            .chat-widget { bottom: 20px; right: 20px; }
+            .chat-window { width: calc(100vw - 40px); right: 0; height: 60vh; max-height: 400px; bottom: 70px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    
+    <header>
+        <div class="logo"><i class="fas fa-shield-halved"></i> LoginGuard</div>
+        <nav>
+            <a href="#home">Bosh sahifa</a>
+            <a href="#features">Imkoniyatlar</a>
+            <a href="#contact">Bog'lanish</a>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <h1>Shubhali kirishlarni aniqlash tizimi</h1>
+        <p>Cybersecurity yo'nalishidagi mukammal yechim. IP monitoring, avtomatik alertlar va xavfsizlik thresholdlari orqali platformangizni to'liq himoya qiling.</p>
+        <a href="/login" class="btn">Tizimga kirish</a>
+    </section>
+
+    <section id="features" class="section">
+        <h2>Tizim Rollari va Funksiyalar</h2>
+        <div class="card-container">
+            <div class="card">
+                <h3><i class="fas fa-user-shield"></i> Admin Paneli</h3>
+                <p>Barcha huquqlar: IP monitoring, Threshold sozlash, Foydalanuvchilarni yaratish va shubhali IP larni bloklash imkoniyati.</p>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-user"></i> Foydalanuvchi Paneli</h3>
+                <p>Faqat o'ziga tegishli Dashboard, Login loglari (faol qurilmalar tarixi) va 2FA profilni xavfsiz boshqarish imkoniyati.</p>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-satellite-dish"></i> Monitoring</h3>
+                <p>IP manzillar va kirish vaqtlarini to'liq tahlil qilish, Telegram loglari orqali shubhali harakatlarni tezkor aniqlash.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="section" style="background: transparent; border: none;">
+        <h2>Biz bilan bog'lanish</h2>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">Loyihaga oid savollaringiz bo'lsa, quyidagi tarmoqlar orqali bog'laning:</p>
+        <div class="contact-info">
+            <div class="contact-item"><i class="fas fa-phone" style="color: #10b981; margin-right: 10px;"></i> <a href="tel:+998910243606">+998 (91) 024 36 06</a></div>
+            <div class="contact-item"><a href="https://t.me/n727l" target="_blank"><i class="fab fa-telegram" style="color: #3b82f6; margin-right: 10px;"></i> @n727l</a></div>
+            <div class="contact-item"><a href="https://instagram.com/72wm__" target="_blank"><i class="fab fa-instagram" style="color: #f43f5e; margin-right: 10px;"></i> 72wm__</a></div>
+            <div class="contact-item"><a href="https://github.com/norboyev_o6" target="_blank"><i class="fab fa-github" style="margin-right: 10px;"></i> @norboyev_o6</a></div>
+        </div>
+    </section>
+
+    <!-- Jonli Chat Bot Widget -->
+    <div class="chat-widget">
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <span><i class="fas fa-headset"></i> Jonli Yordam</span>
+                <i class="fas fa-times close-chat" onclick="toggleChat()"></i>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message msg-other"><b>Tizim:</b> <br> Assalomu alaykum! LoginGuard xizmatiga xush kelibsiz. Savollaringiz bormi?</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Xabar yozing..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button class="chat-button" onclick="toggleChat()">
+            <i class="fas fa-comments"></i>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        particlesJS("particles-js", { "particles": { "number": { "value": window.innerWidth < 768 ? 30 : 60, "density": { "enable": true, "value_area": 800 } }, "color": { "value": "#64ffda" }, "shape": { "type": "circle" }, "opacity": { "value": 0.3, "random": false }, "size": { "value": 3, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#64ffda", "opacity": 0.2, "width": 1 }, "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false } }, "interactivity": { "detect_on": "canvas", "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true }, "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 } }, "push": { "particles_nb": 4 } } }, "retina_detect": true });
+
+        let isChatOpen = false;
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            isChatOpen = !isChatOpen;
+            chatWindow.style.display = isChatOpen ? 'flex' : 'none';
+        }
+
+        const myUsername = "Mehmon_" + Math.floor(Math.random() * 1000);
+        const socket = io();
+
+        socket.on('message', (data) => {
+            const chatMessages = document.getElementById('chatMessages');
+            let msgClass = '';
+            if (data.username === myUsername) { msgClass = 'msg-user'; } 
+            else if (data.role === 'admin') { msgClass = 'msg-admin'; } 
+            else { msgClass = 'msg-other'; }
+            chatMessages.innerHTML += `<div class="message ${msgClass}"><b>${data.username}:</b> <br> ${data.text}</div>`;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        function sendMessage() {
+            const inputField = document.getElementById('chatInput');
+            const messageText = inputField.value.trim();
+            if (messageText !== "") {
+                socket.emit('chatMessage', messageText);
+                inputField.value = '';
+            }
+        }
+
+        function handleKeyPress(event) { if (event.key === 'Enter') { sendMessage(); } }
+    </script>
+</body>
+</html>

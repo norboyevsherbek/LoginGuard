@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <!-- MOBIL UCHUN MUHIM QATOR -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Statistika Grafiki</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg-body: #0a192f; --bg-sidebar: #112240; --card-bg: #1e293b; --text-main: #ccd6f6; --text-muted: #8892b0; --accent: #64ffda; --border-color: #233554; --danger: #ef4444; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
+        
+        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; z-index: 10;}
+        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; }
+        .nav-menu { display: flex; flex-direction: column; margin-top: 20px; }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); text-decoration: none; border-left: 3px solid transparent; transition: 0.3s; }
+        .nav-item.active, .nav-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; box-sizing: border-box; }
+        .chart-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; margin-bottom: 20px; width: 100%; box-sizing: border-box;}
+        
+        /* ====================================================
+           MOBIL QURILMALAR UCHUN MAXSUS CSS
+           ==================================================== */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .sidebar-header { justify-content: center; text-align: center; }
+            .nav-menu { flex-direction: row; overflow-x: auto; margin-top: 0; padding: 5px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+            .nav-item { padding: 10px 15px; border-left: none; border-bottom: 3px solid transparent; }
+            .nav-item.active, .nav-item:hover { border-left-color: transparent; border-bottom-color: var(--accent); }
+            
+            .main-content { padding: 15px; }
+            .chart-card { padding: 15px; }
+            h3 { font-size: 16px; margin-top: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header"><i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> <span>KIBER PORTAL</span></div>
+        <div class="nav-menu">
+            <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> <span>Bosh panel</span></a>
+            <a href="/analytics" class="nav-item active"><i class="fas fa-chart-area"></i> <span>Statistika (Grafik)</span></a>
+            <% if (typeof user !== 'undefined' && user.role === 'admin') { %>
+                <a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a>
+            <% } %>
+            <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span>Profil Sozlamalari</span></a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="chart-card">
+            <h3><i class="fas fa-chart-area" style="color: var(--accent);"></i> Kirishlar Statistikasi (Oxirgi 7 kun)</h3>
+            
+            <!-- Canvas konteynerga olinishi muhim, shunda telefonda responsiv bo'ladi -->
+            <div style="position: relative; height: 50vh; width: 100%;">
+                <canvas id="cyberChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="chart-data" data-logs='<%- JSON.stringify(typeof logs !== "undefined" ? logs : []) %>' data-failed='<%- JSON.stringify(typeof failedLogs !== "undefined" ? failedLogs : []) %>'></div>
+
+    <script>
+        const rawLogs = JSON.parse(document.getElementById('chart-data').dataset.logs);
+        const rawFailedLogs = JSON.parse(document.getElementById('chart-data').dataset.failed);
+        
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            last7Days.push(d.toISOString().split('T')[0]);
+        }
+        
+        const successData = Array(7).fill(0);
+        const failedData = Array(7).fill(0);
+
+        // Muvaffaqiyatli kirishlar
+        rawLogs.forEach(log => {
+            if(!log.login_time) return;
+            const d = new Date(log.login_time + 'Z').toISOString().split('T')[0];
+            const idx = last7Days.indexOf(d);
+            if(idx !== -1) successData[idx]++;
+        });
+
+        // Xato urinishlar (qizil grafik uchun)
+        rawFailedLogs.forEach(fLog => {
+            if(!fLog.attempt_time) return;
+            const d = new Date(fLog.attempt_time + 'Z').toISOString().split('T')[0];
+            const idx = last7Days.indexOf(d);
+            if(idx !== -1) failedData[idx]++;
+        });
+
+        const ctx = document.getElementById('cyberChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: last7Days,
+                datasets: [
+                    { label: 'Muvaffaqiyatli kirishlar', data: successData, borderColor: '#64ffda', backgroundColor: 'rgba(100, 255, 218, 0.1)', borderWidth: 2, fill: true, tension: 0.4 },
+                    { label: 'Bloklangan / Xato urinishlar', data: failedData, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 2, fill: true, tension: 0.4 }
+                ]
+            },
+            options: { 
+                responsive: true,
+                maintainAspectRatio: false, /* Telefonda balandligi chiroyli turishi uchun */
+                plugins: {
+                    legend: {
+                        labels: { color: '#ccd6f6' }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#8892b0' }, grid: { color: '#233554' } },
+                    y: { ticks: { color: '#8892b0', stepSize: 1 }, grid: { color: '#233554' }, beginAtZero: true }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

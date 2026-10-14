@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Profil Sozlamalari</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg-body: #0a192f; --bg-sidebar: #112240; --bg-header: #112240; --card-bg: #1e293b; --text-main: #ccd6f6; --text-muted: #8892b0; --accent: #64ffda; --danger: #ef4444; --border-color: #233554; }
+        body { margin: 0; font-family: sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
+        
+        .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; }
+        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; }
+        .nav-menu { display: flex; flex-direction: column; margin-top: 20px; }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); text-decoration: none; border-left: 3px solid transparent; transition: 0.3s; }
+        .nav-item.active, .nav-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .header { height: 70px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; }
+        .content-body { padding: 30px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .settings-card { background: var(--card-bg); border-radius: 10px; padding: 25px; border: 1px solid var(--border-color); }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label.txt-label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 13px; font-weight: 600; }
+        .form-group input.inp-field { width: 100%; padding: 10px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 5px; color: var(--text-main); box-sizing: border-box; outline: none; }
+        .form-group input.inp-field:focus { border-color: var(--accent); }
+        
+        .btn-primary { background: var(--accent); color: var(--bg-body); width: 100%; padding: 12px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; transition: 0.3s; }
+        .btn-primary:hover { opacity: 0.8; }
+        
+        /* O'chirib-yoqish (Toggle) tugmasi CSS */
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; margin: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: var(--text-muted); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: rgba(100, 255, 218, 0.2); border: 1px solid var(--accent); }
+        input:checked + .slider:before { transform: translateX(24px); background-color: var(--accent); bottom: 3px; }
+
+        /* ====================================================
+           MOBIL QURILMALAR UCHUN MAXSUS CSS
+           ==================================================== */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .sidebar-header { justify-content: center; text-align: center; }
+            .nav-menu { flex-direction: row; overflow-x: auto; margin-top: 0; padding: 5px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+            .nav-item { padding: 10px 15px; border-left: none; border-bottom: 3px solid transparent; }
+            .nav-item.active, .nav-item:hover { border-left-color: transparent; border-bottom-color: var(--accent); }
+            
+            .header { height: auto; padding: 15px; flex-direction: column; gap: 10px; align-items: flex-start; }
+            .content-body { padding: 15px; }
+            .settings-card { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header"><i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> KIBER PORTAL</div>
+        <div class="nav-menu">
+            <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> Bosh panel</a>
+            <a href="/settings" class="nav-item active"><i class="fas fa-user-cog"></i> Profil Sozlamalari</a>
+            <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> Faol Qurilmalar</a>
+        </div>
+    </div>
+    <div class="main-content">
+        <div class="header">
+            <div style="font-weight: bold;"><i class="fas fa-lock" style="color:#8b5cf6;"></i> LoginGuard Platformasi</div>
+            <a href="/dashboard" style="color:var(--accent); text-decoration:none; font-weight: bold;"><i class="fas fa-arrow-left"></i> Ortga qaytish</a>
+        </div>
+        <div class="content-body">
+            <h1 style="margin-top:0;">Profil Sozlamalari</h1>
+            <div class="settings-card">
+                <% if (typeof error !== 'undefined' && error) { %> <div style="color:var(--danger); margin-bottom:15px; font-weight:bold;"><i class="fas fa-exclamation-triangle"></i> <%= error %></div> <% } %>
+                <% if (typeof success !== 'undefined' && success) { %> <div style="color:#10b981; margin-bottom:15px; font-weight:bold;"><i class="fas fa-check-circle"></i> <%= success %></div> <% } %>
+                
+                <form action="/settings/update" method="POST" enctype="multipart/form-data">
+                    <div class="form-group" style="text-align: center; margin-bottom: 25px;">
+                        <div class="avatar-preview" style="width: 110px; height: 110px; border-radius: 50%; background: rgba(0,0,0,0.2); margin: 0 auto 10px auto; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--text-muted); border: 2px solid var(--accent);">
+                            <% if (typeof user !== 'undefined' && user.avatar) { %><img src="<%= user.avatar %>" style="width: 100%; height: 100%; object-fit: cover;"><% } else { %><i class="fas fa-user"></i><% } %>
+                        </div>
+                        <label for="avatarUpload" style="padding: 8px 15px; background: rgba(100,255,218,0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 5px; cursor: pointer;"><i class="fas fa-camera"></i> Rasm yuklash</label>
+                        <input type="file" id="avatarUpload" name="avatar" accept="image/*" style="display: none;" onchange="previewAvatar(this)">
+                    </div>
+
+                    <!-- 2FA TOGGLE -->
+                    <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 5px; border: 1px solid var(--border-color);">
+                        <div>
+                            <label class="txt-label" style="margin: 0; color: var(--text-main); font-size: 15px;">2FA (Ikki bosqichli tasdiqlash)</label>
+                            <span style="font-size: 12px; color: var(--text-muted);">Telegram orqali xavfsizlik kodini so'rash</span>
+                            <% if (typeof dbUser !== 'undefined' && !dbUser.telegram_chat_id) { %>
+                                <div style="font-size: 12px; color: var(--danger); margin-top: 5px;"><i class="fas fa-exclamation-circle"></i> 2FA yoqish uchun avval botga ulaning: <a href="https://t.me/logingoardbot" target="_blank" style="color: var(--accent);">@logingoardbot</a></div>
+                            <% } %>
+                        </div>
+                        <% if (typeof dbUser !== 'undefined' && dbUser.telegram_chat_id) { %>
+                            <label class="switch">
+                                <input type="checkbox" name="enable_2fa" <%= dbUser.is_2fa_enabled === 1 ? 'checked' : '' %>>
+                                <span class="slider"></span>
+                            </label>
+                        <% } else { %>
+                            <label class="switch" style="opacity: 0.5; cursor: not-allowed;">
+                                <input type="checkbox" disabled>
+                                <span class="slider" style="cursor: not-allowed;"></span>
+                            </label>
+                        <% } %>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="txt-label">Yangi login</label>
+                        <input type="text" class="inp-field" name="new_username" value="<%= typeof user !== 'undefined' ? user.username : '' %>">
+                    </div>
+
+                    <!-- YANGI PAROL VA KO'ZCHA -->
+                    <div class="form-group">
+                        <label class="txt-label">Yangi parol (o'zgartirmasangiz bo'sh qoldiring)</label>
+                        <div style="position: relative; width: 100%;">
+                            <input type="password" class="inp-field" name="new_password" id="newPassword" onkeyup="checkPasswordStrength()" style="padding-right: 40px;">
+                            <i class="fas fa-eye" id="toggleNewPassword" onclick="togglePasswordVisibility('newPassword', 'toggleNewPassword')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; transition: 0.3s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'"></i>
+                        </div>
+                        
+                        <div style="height: 5px; width: 100%; background: rgba(255,255,255,0.1); border-radius: 5px; margin-top: 8px; overflow: hidden;">
+                            <div id="strengthBar" style="height: 100%; width: 0%; transition: 0.3s;"></div>
+                        </div>
+                        <div id="strengthText" style="font-size: 12px; margin-top: 5px; font-weight: bold;"></div>
+                    </div>
+
+                    <!-- JORIY PAROL VA KO'ZCHA -->
+                    <div class="form-group">
+                        <label class="txt-label" style="color: var(--danger);">Joriy parol (O'zgarishni saqlash uchun shart)</label>
+                        <div style="position: relative; width: 100%;">
+                            <input type="password" class="inp-field" name="current_password" id="currentPassword" required style="padding-right: 40px;">
+                            <i class="fas fa-eye" id="toggleCurrentPassword" onclick="togglePasswordVisibility('currentPassword', 'toggleCurrentPassword')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; transition: 0.3s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'"></i>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Saqlash</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT QISMLARI -->
+    <script>
+        // Rasm yuklash ko'rinishi
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { document.querySelector('.avatar-preview').innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`; }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Parolni ko'rsatish/yashirish (Ko'zcha)
+        function togglePasswordVisibility(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+                toggleIcon.style.color = 'var(--accent)';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+                toggleIcon.style.color = 'var(--text-muted)';
+            }
+        }
+
+        // Parol kuchliligini tekshirish
+        function checkPasswordStrength() {
+            const password = document.getElementById("newPassword").value;
+            const bar = document.getElementById("strengthBar");
+            const text = document.getElementById("strengthText");
+            
+            if (password.length === 0) {
+                bar.style.width = "0%";
+                text.innerText = "";
+                return;
+            }
+
+            let strength = 0;
+            
+            if (password.length >= 6) strength += 1; 
+            if (password.match(/(?=.*[0-9])/)) strength += 1; 
+            if (password.match(/(?=.*[a-z])(?=.*[A-Z])/)) strength += 1; 
+            if (password.match(/(?=.*[!@#$%^&*])/)) strength += 1; 
+
+            if (strength <= 1) {
+                bar.style.width = "33%";
+                bar.style.backgroundColor = "var(--danger)"; 
+                text.innerText = "Kuchsiz";
+                text.style.color = "var(--danger)";
+            } else if (strength === 2 || strength === 3) {
+                bar.style.width = "66%";
+                bar.style.backgroundColor = "orange"; 
+                text.innerText = "O'rtacha";
+                text.style.color = "orange";
+            } else if (strength >= 4) {
+                bar.style.width = "100%";
+                bar.style.backgroundColor = "var(--success)"; 
+                text.innerText = "Kuchli";
+                text.style.color = "var(--success)";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <!-- MOBIL UCHUN MUHIM QATOR -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-i18n="title_settings">Faol Sessiyalar - Kiberxavfsizlik Portali</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230f172a' d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/><path fill='%2364ffda' d='M12 7c-1.1 0-2 .9-2 2v1H9v6h6v-6h-1V9c0-1.1-.9-2-2-2zm0 1.5c.28 0 .5.22.5.5v1h-1V9c0-.28.22-.5.5-.5z'/></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg-body: #0a192f; --bg-sidebar: #112240; --bg-header: #112240; --card-bg: #1e293b; --text-main: #ccd6f6; --text-muted: #8892b0; --accent: #64ffda; --danger: #ef4444; --success: #10b981; --border-color: #233554; }
+        [data-theme="light"] { --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-header: #ffffff; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --accent: #3b82f6; --danger: #ef4444; --success: #10b981; --border-color: #e2e8f0; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
+        #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
+        
+        .sidebar { width: 260px; background-color: rgba(17, 34, 64, 0.95) !important; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; z-index: 10; }
+        [data-theme="light"] .sidebar { background-color: rgba(255, 255, 255, 0.95) !important; }
+        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-header i { color: var(--danger); }
+        .nav-menu { list-style: none; padding: 0; margin: 20px 0; display: flex; flex-direction: column; gap: 5px; }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); text-decoration: none; font-size: 15px; transition: 0.3s; cursor: pointer; border-left: 3px solid transparent; }
+        .nav-item:hover, .nav-item.active { background-color: rgba(100, 255, 218, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        [data-theme="light"] .nav-item:hover, [data-theme="light"] .nav-item.active { background-color: rgba(59, 130, 246, 0.1); }
+        
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; z-index: 10; background: transparent; }
+        .header { height: 70px; background-color: rgba(17, 34, 64, 0.95) !important; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; transition: 0.3s; }
+        [data-theme="light"] .header { background-color: rgba(255, 255, 255, 0.95) !important; }
+        .header-title { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text-main); }
+        .header-title i { color: #8b5cf6; }
+        .header-controls { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .btn, select { padding: 8px 15px; border-radius: 5px; border: none; font-size: 14px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+        .btn-logout { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); text-decoration: none; }
+        .btn-logout:hover { background-color: var(--danger); color: #fff; }
+        select { background-color: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); outline: none; }
+        .user-profile { display: flex; align-items: center; gap: 10px; padding: 5px 15px; background-color: rgba(100, 255, 218, 0.1); border-radius: 20px; color: var(--accent); font-weight: 600; }
+        [data-theme="light"] .user-profile { background-color: rgba(59, 130, 246, 0.1); }
+        
+        .content-body { padding: 30px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { margin: 0 0 10px 0; font-size: 24px; color: var(--text-main); }
+        .page-header p { margin: 0; color: var(--text-muted); font-size: 14px; }
+        .settings-card { background-color: var(--card-bg); border-radius: 10px; padding: 25px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 25px; }
+        
+        .success { color: var(--success); font-size: 14px; margin-bottom: 15px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); padding: 20px; box-sizing: border-box;}
+        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 10px; border: 1px solid var(--accent); width: 100%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; color: var(--text-main); cursor: pointer; transition: 0.3s; }
+        .close-btn:hover { color: var(--danger); }
+        .contact-list { list-style: none; padding: 0; margin-top: 20px; }
+        .contact-list li { margin-bottom: 15px; }
+        .contact-list a { display: flex; align-items: center; gap: 15px; color: var(--text-main); text-decoration: none; padding: 10px; border-radius: 8px; transition: 0.3s; background: rgba(0,0,0,0.1); }
+        .contact-list a:hover { background: var(--border-color); transform: translateX(5px); color: var(--accent); }
+
+        .chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .chat-button { width: 60px; height: 60px; background: var(--accent); border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); color: var(--bg-body); font-size: 24px; display: flex; justify-content: center; align-items: center; transition: 0.3s; }
+        .chat-button:hover { transform: scale(1.1); box-shadow: 0 5px 20px var(--accent); }
+        .chat-window { display: none; position: absolute; bottom: 70px; right: 0; width: 320px; height: 400px; background: var(--card-bg); border: 1px solid var(--accent); border-radius: 10px; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+        .chat-header { background: var(--accent); padding: 15px; color: var(--bg-body); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .chat-header i.close-chat { cursor: pointer; transition: 0.3s; }
+        .chat-header i.close-chat:hover { transform: scale(1.2); }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.2); }
+        .msg { padding: 8px 12px; border-radius: 8px; font-size: 14px; max-width: 80%; line-height: 1.4; }
+        .msg-other { background: var(--primary); align-self: flex-start; border-left: 2px solid var(--accent); }
+        .msg-admin { background: var(--danger); color: white; align-self: flex-start; border-bottom-left-radius: 0; }
+        .msg-me { background: var(--accent); color: var(--bg-body); align-self: flex-end; border-bottom-right-radius: 0; }
+        .chat-input { display: flex; padding: 10px; background: var(--primary); border-top: 1px solid rgba(100,255,218,0.2); }
+        .chat-input input { flex: 1; padding: 8px; border: none; border-radius: 3px; background: var(--card-bg); color: var(--text-main); outline: none; }
+        .chat-input button { background: var(--accent); color: var(--bg-body); border: none; padding: 8px 12px; margin-left: 5px; border-radius: 3px; cursor: pointer; transition: 0.3s; }
+        .chat-input button:hover { background: white; }
+
+        /* ====================================================
+           MOBIL QURILMALAR UCHUN MAXSUS CSS
+           ==================================================== */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .sidebar-header { justify-content: center; }
+            .nav-menu { flex-direction: row; overflow-x: auto; margin: 0; padding: 5px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+            .nav-item { padding: 10px 15px; border-left: none; border-bottom: 3px solid transparent; }
+            .nav-item.active, .nav-item:hover { border-left-color: transparent; border-bottom-color: var(--accent); }
+            
+            .header { height: auto; padding: 15px; flex-direction: column; gap: 15px; align-items: flex-start; }
+            .header-controls { width: 100%; justify-content: space-between; }
+            
+            .content-body { padding: 15px; }
+            .settings-card { padding: 15px; }
+            .settings-card li { flex-direction: column; align-items: flex-start; gap: 10px; }
+            
+            .chat-window { width: calc(100vw - 40px); right: 0; height: 60vh; max-height: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="sidebar">
+        <div class="sidebar-header"><i class="fas fa-shield-halved"></i> <span data-i18n="portal_name">KIBER PORTAL</span></div>
+        <ul class="nav-menu">
+            <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> <span data-i18n="nav_dashboard">Bosh panel</span></a>
+            <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span data-i18n="nav_settings">Profil Sozlamalari</span></a>
+            <a href="/sessions" class="nav-item active"><i class="fas fa-laptop-house"></i> <span data-i18n="nav_sessions">Faol Qurilmalar</span></a>
+            <a href="#" class="nav-item" onclick="openContactModal()"><i class="fas fa-address-book"></i> <span data-i18n="nav_contact">Admin bilan bog'lanish</span></a>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-title"><i class="fas fa-lock"></i> <span data-i18n="platform_title">LoginGuard Platformasi</span></div>
+            <div class="header-controls">
+                <i class="fas fa-moon" id="themeIcon" style="cursor: pointer; font-size: 20px; color: var(--text-muted);" onclick="toggleTheme()"></i>
+                <select id="languageSelect" onchange="changeLanguage(this.value)">
+                    <option value="uz">UZB</option>
+                    <option value="en">ENG</option>
+                    <option value="ru">RUS</option>
+                </select>
+               <div class="user-profile">
+                    <% if (typeof user !== 'undefined' && user.avatar) { %>
+                        <img src="<%= user.avatar %>" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); margin-right: 5px;">
+                    <% } else { %>
+                        <i class="fas fa-user-circle" style="margin-right: 5px;"></i>
+                    <% } %>
+                    <%= typeof user !== 'undefined' ? user.username : 'Mehmon' %>
+                </div>
+                <a href="/logout" class="btn btn-logout"><i class="fas fa-sign-out-alt"></i> <span data-i18n="btn_logout">Chiqish</span></a>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div class="page-header">
+                <h1 data-i18n="nav_sessions">Faol Qurilmalar (Sessiyalar)</h1>
+                <p data-i18n="sessions_desc">Hisobingizga ulangan oxirgi qurilmalar tarixi. Shubhali holat sezsangiz, darhol barchasidan chiqing.</p>
+            </div>
+
+            <% if (typeof success !== 'undefined' && success) { %> <div class="success"><i class="fas fa-check-circle"></i> <%= success %></div> <% } %>
+
+            <div class="settings-card">
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <% if(typeof logs !== 'undefined' && logs.length > 0) { %>
+                        <% logs.forEach(function(log, index) { %>
+                            <li style="padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+                                <div>
+                                    <strong style="color: var(--text-main); font-size: 15px;">
+                                        <i class="fas <%= log.device_info && (log.device_info.includes('Android') || log.device_info.includes('iOS')) ? 'fa-mobile-alt' : 'fa-desktop' %>" style="color: var(--accent); width: 25px;"></i> 
+                                        <%= log.device_info || 'Noma\'lum qurilma' %>
+                                    </strong><br>
+                                    <span style="font-size: 13px; color: #64748b; margin-left: 25px;">
+                                        IP: <%= log.ip_address %> | <span data-i18n="timestamp">Vaqt</span>: <%= log.login_time ? new Date(log.login_time + 'Z').toLocaleString('uz-UZ') : 'Noma\'lum' %>
+                                    </span>
+                                </div>
+                                <% if(index === 0) { %>
+                                    <span style="color: #10b981; font-size: 12px; font-weight: bold; border: 1px solid #10b981; padding: 4px 10px; border-radius: 20px;" data-i18n="current_session">Hozirgi</span>
+                                <% } %>
+                            </li>
+                        <% }); %>
+                    <% } else { %>
+                        <li style="color: #64748b; font-size: 14px;" data-i18n="no_logs">Ma'lumot topilmadi</li>
+                    <% } %>
+                </ul>
+
+                <form action="/settings/logout-others" method="POST" style="margin-top: 25px;">
+                    <button type="submit" style="background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 12px 20px; border-radius: 5px; cursor: pointer; transition: 0.3s; font-weight: bold; width: 100%;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.background='transparent'">
+                        <i class="fas fa-sign-out-alt"></i> <span data-i18n="btn_logout_others">Boshqa barcha qurilmalardan chiqish</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="contactModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeContactModal()"><i class="fas fa-times"></i></button>
+            <h2 data-i18n="nav_contact" style="color: var(--accent); margin-top:0; margin-bottom: 20px;">Admin bilan bog'lanish</h2>
+            <ul class="contact-list">
+                <li><a href="tel:+998910243606"><i class="fas fa-phone" style="color: #10b981; font-size:20px; width:30px;"></i> +998 (91) 024 36 06</a></li>
+                <li><a href="https://t.me/n727l" target="_blank"><i class="fab fa-telegram" style="color: #3b82f6; font-size:20px; width:30px;"></i> @n727l</a></li>
+                <li><a href="https://instagram.com/72wm__" target="_blank"><i class="fab fa-instagram" style="color: #f43f5e; font-size:20px; width:30px;"></i> 72wm__</a></li>
+                <li><a href="https://github.com/norboyev_o6" target="_blank"><i class="fab fa-github" style="color: var(--text-main); font-size:20px; width:30px;"></i> @norboyev_o6</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-widget">
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <span><i class="fas fa-headset"></i> Jonli Yordam</span>
+                <i class="fas fa-times close-chat" onclick="toggleChat()"></i>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Xabar yozing..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button class="chat-button" onclick="toggleChat()"><i class="fas fa-comments"></i></button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const translations = {
+            en: { title_settings: "Active Sessions - Cyber Security Portal", portal_name: "CYBER PORTAL", nav_dashboard: "Dashboard", nav_settings: "Profile Settings", platform_title: "LoginGuard Platform", btn_logout: "Logout", nav_sessions: "Active Devices", nav_contact: "Contact Admin", sessions_desc: "History of devices connected to your account. Log out of all if you notice suspicious activity.", timestamp: "Time", current_session: "Current", no_logs: "No records found", btn_logout_others: "Log out of all other devices" },
+            uz: { title_settings: "Faol Sessiyalar - Kiberxavfsizlik Portali", portal_name: "KIBER PORTAL", nav_dashboard: "Bosh panel", nav_settings: "Profil Sozlamalari", platform_title: "LoginGuard Platformasi", btn_logout: "Chiqish", nav_sessions: "Faol Qurilmalar", nav_contact: "Admin bilan bog'lanish", sessions_desc: "Hisobingizga ulangan oxirgi qurilmalar tarixi. Shubhali holat sezsangiz, darhol barchasidan chiqing.", timestamp: "Vaqt", current_session: "Hozirgi", no_logs: "Ma'lumot topilmadi", btn_logout_others: "Boshqa barcha qurilmalardan chiqish" },
+            ru: { title_settings: "Активные Сессии - Портал Кибербезопасности", portal_name: "КИБЕР ПОРТАЛ", nav_dashboard: "Панель", nav_settings: "Настройки профиля", platform_title: "Платформа LoginGuard", btn_logout: "Выйти", nav_sessions: "Активные устройства", nav_contact: "Связаться с админом", sessions_desc: "История устройств, подключенных к вашему аккаунту. Выйдите со всех при подозрительной активности.", timestamp: "Время", current_session: "Текущая", no_logs: "Записи не найдены", btn_logout_others: "Выйти из всех других устройств" }
+        };
+        let currentLang = localStorage.getItem('lang') || 'uz';
+        function changeLanguage(lang) {
+            currentLang = lang; localStorage.setItem('lang', lang);
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) el.innerText = translations[lang][key];
+            });
+        }
+        document.getElementById('languageSelect').value = currentLang; changeLanguage(currentLang);
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('theme', theme);
+            document.getElementById('themeIcon').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        function toggleTheme() { setTheme(localStorage.getItem('theme') === 'dark' ? 'light' : 'dark'); }
+        setTheme(localStorage.getItem('theme') || 'dark');
+
+        function loadParticles(color) {
+            particlesJS("particles-js", { "particles": { "number": { "value": window.innerWidth < 600 ? 30 : 60 }, "color": { "value": color }, "shape": { "type": "circle" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "line_linked": { "enable": true, "distance": 150, "color": color, "opacity": 0.2, "width": 1 }, "move": { "enable": true, "speed": 1.5 } }, "retina_detect": true });
+        }
+        setTimeout(() => { loadParticles(localStorage.getItem('theme') === 'dark' ? "#64ffda" : "#3b82f6"); }, 100);
+
+        function openContactModal() { document.getElementById('contactModal').style.display = 'flex'; }
+        function closeContactModal() { document.getElementById('contactModal').style.display = 'none'; }
+
+        const socket = io();
+        let isChatOpen = false;
+        const myUsername = "<%= typeof user !== 'undefined' ? user.username : '' %>";
+        function toggleChat() { document.getElementById('chatWindow').style.display = (isChatOpen = !isChatOpen) ? 'flex' : 'none'; }
+        const chatSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        
+        socket.on('message', (data) => {
+            const chatMessages = document.getElementById('chatMessages');
+            let msgClass = data.username === myUsername ? 'msg-me' : (data.role === 'admin' ? 'msg-admin' : 'msg-other');
+            chatMessages.innerHTML += `<div class="msg ${msgClass}"><b>${data.username}:</b> <br> ${data.text}</div>`;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            if (data.username !== myUsername) {
+                chatSound.play().catch(e => console.log("Ovoz bloklandi"));
+            }
+        });
+        function sendMessage() {
+            const inputField = document.getElementById('chatInput');
+            if (inputField.value.trim() !== "") { socket.emit('chatMessage', inputField.value.trim()); inputField.value = ''; }
+        }
+        function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+    </script>
+</body>
+</html>
