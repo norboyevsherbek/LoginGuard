@@ -96,17 +96,14 @@ const requireAdmin = (req, res, next) => req.session.role === 'admin' ? next() :
 // YANGILANGAN TELEGRAM BOT MANTIG'I
 // ==========================================
 if (bot) {
-    // 1. Ssilka orqali (yoki /start admin) kirganda
     bot.start((ctx) => {
         handleBotConnection(ctx, ctx.payload);
     });
 
-    // 2. Oddiy xabar qilib (start admin) yoki (admin) deb yozganda
     bot.on('text', (ctx) => {
         const text = ctx.message.text.trim();
         let username = text;
         
-        // Agar so'z "start admin" yoki "/start admin" bilan boshlansa
         if (text.toLowerCase().startsWith('start ')) {
             username = text.substring(6).trim();
         } else if (text.toLowerCase().startsWith('/start ')) {
@@ -116,7 +113,6 @@ if (bot) {
         handleBotConnection(ctx, username);
     });
 
-    // Ulanishni amalga oshiruvchi asosiy funksiya
     function handleBotConnection(ctx, requestedUsername) {
         const chatId = ctx.chat.id; 
         
@@ -127,7 +123,6 @@ if (bot) {
         db.get(`SELECT * FROM users WHERE username = ?`, [requestedUsername], (err, user) => {
             if (!user) return ctx.replyWithHTML(`❌ <b>${requestedUsername}</b> logini tizimda topilmadi. To'g'ri login yozganingizga ishonch hosil qiling.`);
             
-            // Telegram ID ni bazaga saqlash va 2FA ni yoqish
             db.run(`UPDATE users SET telegram_chat_id = ?, is_2fa_enabled = 1 WHERE id = ?`, [chatId.toString(), user.id], () => {
                 
                 const tempPassword = Math.floor(100000 + Math.random() * 900000).toString(); 
@@ -238,11 +233,11 @@ app.get('/admin/export-logs', requireAdmin, (req, res) => {
 
 app.get('/dashboard', requireAuth, (req, res) => {
     if (req.session.role === 'admin') {
-        db.all(`SELECT login_logs.id, users.username, users.role, login_logs.ip_address, login_logs.location, login_logs.login_time, blocked_ips.id as is_blocked FROM login_logs JOIN users ON login_logs.user_id = users.id LEFT JOIN blocked_ips ON login_logs.ip_address = blocked_ips.ip_address WHERE users.role = 'user' ORDER BY login_time DESC LIMIT 50`, (err, userLogs) => {
-            db.all(`SELECT login_logs.id, users.username, login_logs.ip_address, login_logs.location, login_logs.login_time FROM login_logs JOIN users ON login_logs.user_id = users.id WHERE users.role = 'admin' ORDER BY login_time DESC LIMIT 50`, (err, adminLogs) => {
+        // LIMIT 50 olib tashlandi, endi barcha loglar ko'rinadi
+        db.all(`SELECT login_logs.id, users.username, users.role, login_logs.ip_address, login_logs.location, login_logs.login_time, blocked_ips.id as is_blocked FROM login_logs JOIN users ON login_logs.user_id = users.id LEFT JOIN blocked_ips ON login_logs.ip_address = blocked_ips.ip_address WHERE users.role = 'user' ORDER BY login_time DESC`, (err, userLogs) => {
+            db.all(`SELECT login_logs.id, users.username, login_logs.ip_address, login_logs.location, login_logs.login_time FROM login_logs JOIN users ON login_logs.user_id = users.id WHERE users.role = 'admin' ORDER BY login_time DESC`, (err, adminLogs) => {
                 db.all(`SELECT * FROM blocked_ips`, (err, blockedIps) => {
                     db.all(`SELECT * FROM failed_login_logs ORDER BY attempt_time DESC LIMIT 20`, (err, failedLogs) => {
-                        // Admin uchun xabarnoma: Barcha shubhali kirishlar soni
                         const notifications = (failedLogs || []).map(f => ({
                             title: 'Shubhali kirish urinishi!',
                             msg: `${f.username} akkauntiga ${f.ip_address} IP dan noto'g'ri parol kiritildi.`,
@@ -262,11 +257,8 @@ app.get('/dashboard', requireAuth, (req, res) => {
             });
         });
     } else {
-        // 1-qator: LIMIT 10 olib tashlandi
         db.all(`SELECT id, ip_address, location, login_time FROM login_logs WHERE user_id = ? ORDER BY login_time DESC`, [req.session.userId], (err, logs) => {
-            // 2-qator: LIMIT 10 olib tashlandi
             db.all(`SELECT ip_address, location, attempt_time FROM failed_login_logs WHERE username = ? ORDER BY attempt_time DESC`, [req.session.username], (err, failedLogs) => {
-                // Oddiy foydalanuvchi uchun xabarnoma: Faqat uning o'ziga tegishli xato kirishlar
                 const notifications = (failedLogs || []).map(f => ({
                     title: 'Xavf ogohlantirishi!',
                     msg: `Sizning hisobingizga ${f.ip_address} IP manzilidan xato parol bilan kirishga urinish bo'ldi!`,
@@ -287,7 +279,6 @@ app.get('/dashboard', requireAuth, (req, res) => {
 });
 
 app.get('/sessions', requireAuth, (req, res) => { 
-    // LIMIT 10 olib tashlandi
     db.all(`SELECT ip_address, location, login_time, device_info FROM login_logs WHERE user_id = ? ORDER BY login_time DESC`, [req.session.userId], (err, logs) => res.render('sessions', { user: req.session, logs: logs || [], error: null, success: req.query.success ? "Boshqa barcha qurilmalardan chiqildi!" : null }));
 });
 
@@ -329,12 +320,10 @@ app.post('/admin/unblock-ip', requireAdmin, (req, res) => { db.run(`DELETE FROM 
 
 // --- GRAFIK VA FOYDALANUCHI QO'SHISH ROUTELARI ---
 
-// 1. Foydalanuvchi qo'shish sahifasini ochish (GET)
 app.get('/admin/add-user', requireAuth, requireAdmin, (req, res) => {
     res.render('add-user', { user: req.session });
 });
 
-// 2. Yangi foydalanuvchini bazaga saqlash (POST - Parol bcrypt bilan shifrlanadi)
 app.post('/admin/add-user', requireAuth, requireAdmin, (req, res) => {
     const { username, password, role } = req.body;
     bcrypt.hash(password, 10, (err, hash) => {
@@ -348,7 +337,6 @@ app.post('/admin/add-user', requireAuth, requireAdmin, (req, res) => {
     });
 });
 
-// 3. Statistika (Grafik) sahifasi (GET)
 app.get('/analytics', requireAuth, (req, res) => {
     db.all(`SELECT login_time FROM login_logs`, (err, logs) => {
         db.all(`SELECT attempt_time FROM failed_login_logs`, (err2, failedLogs) => {
