@@ -92,38 +92,62 @@
         }
     </style>
 
-    <style>
-  /* Kompyuterda menyu tugmasini yashirish */
+   <style>
+  /* Kompyuter ekranlarida tugmalarni yashirish */
   @media (min-width: 769px) {
     .hamburger-btn { display: none; }
+    .mobile-logout { display: none; }
   }
 
-  /* Telefonda tugmani ko'rsatish va chap menyuni yashirish */
+  /* Telefon ekranlari uchun to'liq moslashuv */
   @media (max-width: 768px) {
     .hamburger-btn {
       display: inline-block;
-      font-size: 26px;
+      font-size: 28px;
       background: transparent;
       border: none;
-      color: white; /* Agar Kiber Portal foni oq bo'lsa, color: black; qiling */
+      color: white;
       cursor: pointer;
-      margin-right: 15px;
     }
     
-    /* Chap menyuni (Kiber portal yozuvi bor qismni) yashirib turish */
+    /* Menyuni O'NG tomonga o'tkazish va fonga rang berish */
     .sidebar {
       position: fixed;
-      left: -100%;
+      right: -100%; /* Chapni bekor qilib, o'ngdan yashiramiz */
+      left: auto !important; 
       top: 0;
-      width: 250px;
+      width: 260px;
       height: 100vh;
+      background-color: #161e2d; /* Kiber portalga mos to'q ko'k fon */
       transition: all 0.3s ease;
       z-index: 9999;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.5); /* Chiroyli qoramtir soya */
     }
 
-    /* Tugma bosilganda menyu ekranga chiqishi uchun */
+    /* Tugma bosilganda o'ngdan siljib chiqishi */
     .sidebar.active {
-      left: 0;
+      right: 0 !important;
+    }
+
+    /* Menyudagi yozuvlarni qat'iy ravishda tagma-tag qilish */
+    .nav-menu {
+      display: flex !important;
+      flex-direction: column !important;
+      padding-top: 15px;
+    }
+
+    .nav-item {
+      display: flex !important;
+      align-items: center !important;
+      width: 100% !important;
+      padding: 15px 20px !important;
+      margin: 0 !important;
+      font-size: 16px !important;
+    }
+    
+    /* Ikonkalar tekis va bir qatorda turishi uchun */
+    .nav-item i {
+      width: 30px;
     }
   }
 </style>
@@ -135,17 +159,37 @@
     &#9776;
 </button>
 
+<!-- 3 ta chiziqchali tugma (Ekranning o'ng burchagiga o'tkazildi) -->
+<button id="mobile-menu-btn" class="hamburger-btn" style="position: absolute; top: 15px; right: 20px; z-index: 10000;">
+    &#9776;
+</button>
+
 <div class="sidebar">
-    <div class="sidebar-header"><i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> <span data-i18n="portal_name">KIBER PORTAL</span></div>
+    <!-- Menyu sarlavhasi -->
+    <div class="sidebar-header" style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> 
+        <span data-i18n="portal_name">KIBER PORTAL</span>
+    </div>
+    
+    <!-- Tagma-tag turadigan bo'limlar -->
     <div class="nav-menu">
         <a href="/dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> <span data-i18n="nav_dashboard">Bosh panel</span></a>
         <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span>Statistika (Grafik)</span></a>
+        
         <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
             <a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a>
         <% } %>
+        
         <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span data-i18n="nav_settings">Profil Sozlamalari</span></a>
         <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> <span data-i18n="nav_sessions">Faol Qurilmalar</span></a>
         <a href="#" class="nav-item" onclick="document.getElementById('contactModal').style.display='flex'"><i class="fas fa-address-book"></i> <span data-i18n="nav_contact">Bog'lanish</span></a>
+        
+        <!-- YANGA QO'SHILGAN QISM: MENYU OXIRIDAGI CHIQISH TUGMASI -->
+        <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+            <a href="/logout" class="nav-item mobile-logout" style="color: #ff4d4d;">
+                <i class="fas fa-sign-out-alt"></i> <span>Chiqish</span>
+            </a>
+        </div>
     </div>
 </div>
     
@@ -397,5 +441,6 @@
     });
   }
 </script>
+
 </body>
 </html>
