@@ -60,10 +60,9 @@ db.serialize(() => {
     db.run(`ALTER TABLE login_logs ADD COLUMN location TEXT`, (err) => {});
     db.run(`ALTER TABLE failed_login_logs ADD COLUMN location TEXT`, (err) => {});
 
-   bcrypt.hash('User!1', 10, (err, hash) => {
-        // Avval majburiy ravishda parolni yangilaymiz (UPDATE)
+    // ADMIN PAROLINI DOIMIY QILIB YANGILASH QISMI (O'zingiz o'zgartirgan bo'lsangiz o'z holicha qoldiring)
+    bcrypt.hash('admin123', 10, (err, hash) => {
         db.run(`UPDATE users SET password = ? WHERE username = 'admin'`, [hash], function(err) {
-            // Agar admin hali umuman yaratilmagan bo'lsa, yangi yaratamiz
             if (this.changes === 0) {
                 db.run(`INSERT INTO users (username, password, role) VALUES ('admin', ?, 'admin')`, [hash]);
             }
@@ -99,10 +98,24 @@ const requireAuth = (req, res, next) => {
 };
 const requireAdmin = (req, res, next) => req.session.role === 'admin' ? next() : res.status(403).send("Ruxsat yo'q");
 
+// ===============================================
+// TELEGRAM BOT MANTIG'I (CHAT VA 2FA UCHUN)
+// ===============================================
 if (bot) {
     bot.start((ctx) => handleBotConnection(ctx, ctx.payload));
     bot.on('text', (ctx) => {
         const text = ctx.message.text.trim();
+        const chatId = ctx.chat.id.toString();
+
+        // 1. TELEGRAMDAN WEB PORTALGA XABAR YUBORISH (CHAT)
+        // Agar yozayotgan odam Admin bo'lsa va xabar start buyrug'i bo'lmasa, uni saytga jo'natamiz
+        if (chatId === ADMIN_CHAT_ID && !text.toLowerCase().startsWith('start') && !text.toLowerCase().startsWith('/start')) {
+            // Saytdagi barcha ochiq chatlarga xabarni yuborish
+            io.emit('message', { username: 'Admin (Telegram)', text: text, role: 'admin' });
+            return ctx.reply("📨 Javobingiz saytdagi foydalanuvchiga yuborildi!", { disable_notification: true });
+        }
+
+        // 2. 2FA (PROFILNI BOG'LASH) QISMI
         let username = text;
         if (text.toLowerCase().startsWith('start ')) username = text.substring(6).trim();
         else if (text.toLowerCase().startsWith('/start ')) username = text.substring(7).trim();
@@ -111,7 +124,7 @@ if (bot) {
 
     function handleBotConnection(ctx, requestedUsername) {
         const chatId = ctx.chat.id; 
-        if (!requestedUsername) return ctx.replyWithHTML("👋 <b>Salom! Bu LoginGuard boti.</b>\n\nSaytdagi profilingizni ulash uchun loginingizni yozib yuboring.\nMasalan: <code>admin</code>");
+        if (!requestedUsername) return ctx.replyWithHTML("👋 <b>Salom! Bu LoginGuard boti.</b>\n\nSaytdagi profilingizni ulash uchun loginingizni yozib yuboring.\nMasalan: <code>admin</code>\n\n<i>Yoki saytdan kelgan chat xabarlariga to'g'ridan-to'g'ri shu yerda javob yozishingiz mumkin.</i>");
         db.get(`SELECT * FROM users WHERE username = ?`, [requestedUsername], (err, user) => {
             if (!user) return ctx.replyWithHTML(`❌ <b>${requestedUsername}</b> logini tizimda topilmadi. To'g'ri login yozganingizga ishonch hosil qiling.`);
             db.run(`UPDATE users SET telegram_chat_id = ?, is_2fa_enabled = 1 WHERE id = ?`, [chatId.toString(), user.id], () => {
@@ -222,158 +235,79 @@ app.get('/admin/export-logs', requireAdmin, (req, res) => {
     });
 });
 
-// ===============================================
-// ASOSIY BOSH PANEL MANTIG'I (FILTRLAR BILAN)
-// ===============================================
 app.get('/dashboard', requireAuth, (req, res) => {
     const filter = req.query.filter || 'all';
-    let timeFilterSQL = "";
-    let failedTimeFilterSQL = "";
-    
-    // SQL filtrlari (Bugun, 1 hafta, 1 oy)
-    if (filter === 'today') {
-        timeFilterSQL = " WHERE login_logs.login_time >= datetime('now', '-24 hours')";
-        failedTimeFilterSQL = " WHERE attempt_time >= datetime('now', '-24 hours')";
-    } else if (filter === 'week') {
-        timeFilterSQL = " WHERE login_logs.login_time >= datetime('now', '-7 days')";
-        failedTimeFilterSQL = " WHERE attempt_time >= datetime('now', '-7 days')";
-    } else if (filter === 'month') {
-        timeFilterSQL = " WHERE login_logs.login_time >= datetime('now', '-30 days')";
-        failedTimeFilterSQL = " WHERE attempt_time >= datetime('now', '-30 days')";
-    }
+    let timeFilterSQL = ""; let failedTimeFilterSQL = "";
+    if (filter === 'today') { timeFilterSQL = " WHERE login_logs.login_time >= datetime('now', '-24 hours')"; failedTimeFilterSQL = " WHERE attempt_time >= datetime('now', '-24 hours')"; } 
+    else if (filter === 'week') { timeFilterSQL = " WHERE login_logs.login_time >= datetime('now', '-7 days')"; failedTimeFilterSQL = " WHERE attempt_time >= datetime('now', '-7 days')"; } 
+    else if (filter === 'month') { timeFilterSQL = " WHERE login_logs.login_time >= datetime('now', '-30 days')"; failedTimeFilterSQL = " WHERE attempt_time >= datetime('now', '-30 days')"; }
 
     if (req.session.role === 'admin') {
         db.get(`SELECT COUNT(id) as count FROM users`, (err, countRow) => {
             const totalUsers = countRow ? countRow.count : 0;
-            
             db.get(`SELECT COUNT(id) as total_logs FROM login_logs ${timeFilterSQL.replace('login_logs.', '')}`, (err, logsCountRow) => {
                 const totalLogsCount = logsCountRow ? logsCountRow.total_logs : 0;
-                
                 db.all(`SELECT login_logs.id, users.username, users.role, login_logs.ip_address, login_logs.location, login_logs.login_time, blocked_ips.id as is_blocked FROM login_logs JOIN users ON login_logs.user_id = users.id LEFT JOIN blocked_ips ON login_logs.ip_address = blocked_ips.ip_address ${timeFilterSQL} ORDER BY login_time DESC LIMIT 50`, (err, logs) => {
                     db.all(`SELECT * FROM blocked_ips`, (err, blockedIps) => {
                         db.all(`SELECT * FROM failed_login_logs ${failedTimeFilterSQL} ORDER BY attempt_time DESC LIMIT 20`, (err, failedLogs) => {
-                            const notifications = (failedLogs || []).map(f => ({
-                                title: 'Shubhali kirish urinishi!', msg: `${f.username} akkauntiga ${f.ip_address} IP dan noto'g'ri parol kiritildi.`, time: f.attempt_time
-                            }));
-                            res.render('dashboard', { 
-                                user: req.session, 
-                                logs: logs || [], 
-                                blockedIpsCount: blockedIps ? blockedIps.length : 0, 
-                                failedLogs: failedLogs || [], 
-                                notifications: notifications,
-                                totalUsers: totalUsers, 
-                                totalLogsCount: totalLogsCount,
-                                currentFilter: filter // JS uchun filterni yuborish
-                            });
+                            const notifications = (failedLogs || []).map(f => ({ title: 'Shubhali kirish urinishi!', msg: `${f.username} akkauntiga ${f.ip_address} IP dan noto'g'ri parol kiritildi.`, time: f.attempt_time }));
+                            res.render('dashboard', { user: req.session, logs: logs || [], blockedIpsCount: blockedIps ? blockedIps.length : 0, failedLogs: failedLogs || [], notifications: notifications, totalUsers: totalUsers, totalLogsCount: totalLogsCount, currentFilter: filter });
                         });
                     });
                 });
             });
         });
     } else {
-        let userTimeFilterSQL = timeFilterSQL ? timeFilterSQL.replace('WHERE ', 'AND ') : "";
-        let userFailedTimeFilterSQL = failedTimeFilterSQL ? failedTimeFilterSQL.replace('WHERE ', 'AND ') : "";
-
+        let userTimeFilterSQL = timeFilterSQL ? timeFilterSQL.replace('WHERE ', 'AND ') : ""; let userFailedTimeFilterSQL = failedTimeFilterSQL ? failedTimeFilterSQL.replace('WHERE ', 'AND ') : "";
         db.get(`SELECT COUNT(id) as total_logs FROM login_logs WHERE user_id = ? ${userTimeFilterSQL.replace('login_logs.', '')}`, [req.session.userId], (err, logsCountRow) => {
             const totalLogsCount = logsCountRow ? logsCountRow.total_logs : 0;
-            
             db.all(`SELECT id, ip_address, location, login_time FROM login_logs WHERE user_id = ? ${userTimeFilterSQL.replace('login_logs.', '')} ORDER BY login_time DESC LIMIT 50`, [req.session.userId], (err, logs) => {
                 db.all(`SELECT ip_address, location, attempt_time FROM failed_login_logs WHERE username = ? ${userFailedTimeFilterSQL} ORDER BY attempt_time DESC LIMIT 20`, [req.session.username], (err, failedLogs) => {
                     const notifications = (failedLogs || []).map(f => ({ title: 'Xavf ogohlantirishi!', msg: `Sizning hisobingizga ${f.ip_address} IP manzilidan xato parol bilan kirishga urinish bo'ldi!`, time: f.attempt_time }));
-                    res.render('dashboard', { 
-                        user: req.session, 
-                        logs: logs || [], 
-                        adminLogs: [], 
-                        blockedIpsCount: 0, 
-                        failedLogs: failedLogs || [], 
-                        notifications: notifications, 
-                        totalLogsCount: totalLogsCount,
-                        currentFilter: filter
-                    });
+                    res.render('dashboard', { user: req.session, logs: logs || [], adminLogs: [], blockedIpsCount: 0, failedLogs: failedLogs || [], notifications: notifications, totalLogsCount: totalLogsCount, currentFilter: filter });
                 });
             });
         });
     }
 });
 
-// FOYDALANUVCHILARNI BOSHQARISH
-app.get('/admin/users', requireAuth, requireAdmin, (req, res) => {
-    db.all(`SELECT id, username, role, is_blocked FROM users`, (err, allUsers) => { res.render('users', { user: req.session, allUsers: allUsers || [] }); });
-});
-app.post('/admin/users/toggle-block', requireAuth, requireAdmin, (req, res) => {
-    db.get(`SELECT is_blocked FROM users WHERE id = ?`, [req.body.user_id], (err, u) => {
-        if(u) { const newStatus = u.is_blocked ? 0 : 1; db.run(`UPDATE users SET is_blocked = ?, session_token = NULL WHERE id = ?`, [newStatus, req.body.user_id], () => res.redirect('/admin/users')); } else res.redirect('/admin/users');
-    });
-});
-app.post('/admin/users/edit', requireAuth, requireAdmin, (req, res) => {
-    const { user_id, new_username, new_password } = req.body;
-    if(new_password && new_password.trim() !== "") { bcrypt.hash(new_password, 10, (err, hash) => { db.run(`UPDATE users SET username = ?, password = ? WHERE id = ?`, [new_username, hash, user_id], () => res.redirect('/admin/users')); }); } 
-    else { db.run(`UPDATE users SET username = ? WHERE id = ?`, [new_username, user_id], () => res.redirect('/admin/users')); }
-});
-app.post('/admin/users/delete', requireAuth, requireAdmin, (req, res) => {
-    db.run(`DELETE FROM users WHERE id = ?`, [req.body.user_id], () => { db.run(`DELETE FROM login_logs WHERE user_id = ?`, [req.body.user_id], () => res.redirect('/admin/users')); });
-});
+app.get('/admin/users', requireAuth, requireAdmin, (req, res) => { db.all(`SELECT id, username, role, is_blocked FROM users`, (err, allUsers) => { res.render('users', { user: req.session, allUsers: allUsers || [] }); }); });
+app.post('/admin/users/toggle-block', requireAuth, requireAdmin, (req, res) => { db.get(`SELECT is_blocked FROM users WHERE id = ?`, [req.body.user_id], (err, u) => { if(u) { const newStatus = u.is_blocked ? 0 : 1; db.run(`UPDATE users SET is_blocked = ?, session_token = NULL WHERE id = ?`, [newStatus, req.body.user_id], () => res.redirect('/admin/users')); } else res.redirect('/admin/users'); }); });
+app.post('/admin/users/edit', requireAuth, requireAdmin, (req, res) => { const { user_id, new_username, new_password } = req.body; if(new_password && new_password.trim() !== "") { bcrypt.hash(new_password, 10, (err, hash) => { db.run(`UPDATE users SET username = ?, password = ? WHERE id = ?`, [new_username, hash, user_id], () => res.redirect('/admin/users')); }); } else { db.run(`UPDATE users SET username = ? WHERE id = ?`, [new_username, user_id], () => res.redirect('/admin/users')); } });
+app.post('/admin/users/delete', requireAuth, requireAdmin, (req, res) => { db.run(`DELETE FROM users WHERE id = ?`, [req.body.user_id], () => { db.run(`DELETE FROM login_logs WHERE user_id = ?`, [req.body.user_id], () => res.redirect('/admin/users')); }); });
 
-app.get('/sessions', requireAuth, (req, res) => { 
-    db.all(`SELECT ip_address, location, login_time, device_info FROM login_logs WHERE user_id = ? ORDER BY login_time DESC LIMIT 50`, [req.session.userId], (err, logs) => res.render('sessions', { user: req.session, logs: logs || [], error: null, success: req.query.success ? "Boshqa barcha qurilmalardan chiqildi!" : null }));
-});
-
-app.get('/settings', requireAuth, (req, res) => { 
-    db.get(`SELECT * FROM users WHERE id = ?`, [req.session.userId], (err, dbUser) => { res.render('settings', { user: req.session, dbUser: dbUser || {}, error: null, success: null }); });
-});
-
-app.post('/settings/update', requireAuth, upload.single('avatar'), (req, res) => {
-    db.get(`SELECT * FROM users WHERE id = ?`, [req.session.userId], (err, user) => {
-        bcrypt.compare(req.body.current_password, user.password, (err, isMatch) => {
-            if (!isMatch) return res.render('settings', { user: req.session, dbUser: user, error: "Joriy parol noto'g'ri!", success: null });
-            
-            let finalUsername = req.body.new_username || user.username;
-            let finalAvatar = req.file ? '/uploads/' + req.file.filename : user.avatar;
-            let is2FA = req.body.enable_2fa === 'on' ? 1 : 0;
-
-            const saveToDb = (hash) => {
-                db.run(`UPDATE users SET username = ?, password = ?, avatar = ?, is_2fa_enabled = ? WHERE id = ?`, [finalUsername, hash, finalAvatar, is2FA, req.session.userId], function(err) {
-                    if (err) return res.render('settings', { user: req.session, dbUser: user, error: "Bu login band!", success: null });
-                    req.session.username = finalUsername; req.session.avatar = finalAvatar; user.is_2fa_enabled = is2FA;
-                    res.render('settings', { user: req.session, dbUser: user, error: null, success: "Ma'lumotlar yangilandi!" });
-                });
-            };
-            if (req.body.new_password && req.body.new_password.trim() !== "") bcrypt.hash(req.body.new_password, 10, (err, hash) => saveToDb(hash)); else saveToDb(user.password);
-        });
-    });
-});
-
-app.post('/settings/logout-others', requireAuth, (req, res) => {
-    const newToken = Math.random().toString(36).substring(2); 
-    db.run(`UPDATE users SET session_token = ? WHERE id = ?`, [newToken, req.session.userId], () => { req.session.token = newToken; res.redirect('/sessions?success=1'); });
-});
-
+app.get('/sessions', requireAuth, (req, res) => { db.all(`SELECT ip_address, location, login_time, device_info FROM login_logs WHERE user_id = ? ORDER BY login_time DESC LIMIT 50`, [req.session.userId], (err, logs) => res.render('sessions', { user: req.session, logs: logs || [], error: null, success: req.query.success ? "Boshqa barcha qurilmalardan chiqildi!" : null })); });
+app.get('/settings', requireAuth, (req, res) => { db.get(`SELECT * FROM users WHERE id = ?`, [req.session.userId], (err, dbUser) => { res.render('settings', { user: req.session, dbUser: dbUser || {}, error: null, success: null }); }); });
+app.post('/settings/update', requireAuth, upload.single('avatar'), (req, res) => { db.get(`SELECT * FROM users WHERE id = ?`, [req.session.userId], (err, user) => { bcrypt.compare(req.body.current_password, user.password, (err, isMatch) => { if (!isMatch) return res.render('settings', { user: req.session, dbUser: user, error: "Joriy parol noto'g'ri!", success: null }); let finalUsername = req.body.new_username || user.username; let finalAvatar = req.file ? '/uploads/' + req.file.filename : user.avatar; let is2FA = req.body.enable_2fa === 'on' ? 1 : 0; const saveToDb = (hash) => { db.run(`UPDATE users SET username = ?, password = ?, avatar = ?, is_2fa_enabled = ? WHERE id = ?`, [finalUsername, hash, finalAvatar, is2FA, req.session.userId], function(err) { if (err) return res.render('settings', { user: req.session, dbUser: user, error: "Bu login band!", success: null }); req.session.username = finalUsername; req.session.avatar = finalAvatar; user.is_2fa_enabled = is2FA; res.render('settings', { user: req.session, dbUser: user, error: null, success: "Ma'lumotlar yangilandi!" }); }); }; if (req.body.new_password && req.body.new_password.trim() !== "") bcrypt.hash(req.body.new_password, 10, (err, hash) => saveToDb(hash)); else saveToDb(user.password); }); }); });
+app.post('/settings/logout-others', requireAuth, (req, res) => { const newToken = Math.random().toString(36).substring(2); db.run(`UPDATE users SET session_token = ? WHERE id = ?`, [newToken, req.session.userId], () => { req.session.token = newToken; res.redirect('/sessions?success=1'); }); });
 app.post('/admin/block-ip', requireAdmin, (req, res) => { db.run(`INSERT OR IGNORE INTO blocked_ips (ip_address) VALUES (?)`, [req.body.ip_address], () => res.redirect('/dashboard')); });
 app.post('/admin/unblock-ip', requireAdmin, (req, res) => { db.run(`DELETE FROM blocked_ips WHERE ip_address = ?`, [req.body.ip_address], () => res.redirect('/dashboard')); });
 app.get('/admin/add-user', requireAuth, requireAdmin, (req, res) => { res.render('add-user', { user: req.session }); });
-
-app.post('/admin/add-user', requireAuth, requireAdmin, (req, res) => {
-    const { username, password, role } = req.body;
-    bcrypt.hash(password, 10, (err, hash) => {
-        db.run(`INSERT INTO users (username, password, role) VALUES (?, ?, ?)`, [username, hash, role || 'user'], (err) => {
-            if (err) return res.redirect('/admin/add-user');
-            res.redirect('/dashboard');
-        });
-    });
-});
-
-app.get('/analytics', requireAuth, (req, res) => {
-    db.all(`SELECT login_time FROM login_logs`, (err, logs) => {
-        db.all(`SELECT attempt_time FROM failed_login_logs`, (err2, failedLogs) => { res.render('analytics', { user: req.session, logs: logs || [], failedLogs: failedLogs || [] }); });
-    });
-});
-
+app.post('/admin/add-user', requireAuth, requireAdmin, (req, res) => { const { username, password, role } = req.body; bcrypt.hash(password, 10, (err, hash) => { db.run(`INSERT INTO users (username, password, role) VALUES (?, ?, ?)`, [username, hash, role || 'user'], (err) => { if (err) return res.redirect('/admin/add-user'); res.redirect('/dashboard'); }); }); });
+app.get('/analytics', requireAuth, (req, res) => { db.all(`SELECT login_time FROM login_logs`, (err, logs) => { db.all(`SELECT attempt_time FROM failed_login_logs`, (err2, failedLogs) => { res.render('analytics', { user: req.session, logs: logs || [], failedLogs: failedLogs || [] }); }); }); });
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/login'); });
 
+// ===============================================
+// JONLI CHAT UCHUN SOCKET.IO MANTIG'I
+// ===============================================
 io.on('connection', (socket) => {
-    const req = socket.request; const userRole = req.session.role || 'guest'; const username = req.session.username || 'Mehmon';
+    const req = socket.request; 
+    const userRole = req.session.role || 'guest'; 
+    const username = req.session.username || 'Mehmon';
+    
     if (userRole === 'admin') socket.join('admins');
-    socket.on('chatMessage', (msg) => { io.emit('message', { username, text: msg, role: userRole }); });
+    
+    // Foydalanuvchi saytdan xabar yuborganda:
+    socket.on('chatMessage', (msg) => { 
+        // 1. Ekranda (saytda) ko'rsatish
+        io.emit('message', { username, text: msg, role: userRole }); 
+        
+        // 2. TELEGRAMGA ADMIN UCHUN JO'NATISH (agar yozgan odam admin bo'lmasa)
+        if (userRole !== 'admin' && bot && ADMIN_CHAT_ID) {
+            const telegramMsg = `💬 <b>YANGI XABAR (Jonli Chat)</b>\n👤 Foydalanuvchi: <b>${username}</b>\n📝 Matn: ${msg}`;
+            bot.telegram.sendMessage(ADMIN_CHAT_ID, telegramMsg, { parse_mode: 'HTML' }).catch(err => console.error(err));
+        }
+    });
 });
 
 server.listen(PORT, () => console.log(`Server: http://localhost:${PORT}`));
