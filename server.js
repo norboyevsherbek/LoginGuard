@@ -60,8 +60,8 @@ db.serialize(() => {
     db.run(`ALTER TABLE login_logs ADD COLUMN location TEXT`, (err) => {});
     db.run(`ALTER TABLE failed_login_logs ADD COLUMN location TEXT`, (err) => {});
 
-    // ADMIN PAROLINI DOIMIY QILIB YANGILASH QISMI (O'zingiz o'zgartirgan bo'lsangiz o'z holicha qoldiring)
-    bcrypt.hash('admin123', 10, (err, hash) => {
+   // ADMIN PAROLINI DOIMIY QILIB YANGILASH QISMI 
+    bcrypt.hash('User!1', 10, (err, hash) => {
         db.run(`UPDATE users SET password = ? WHERE username = 'admin'`, [hash], function(err) {
             if (this.changes === 0) {
                 db.run(`INSERT INTO users (username, password, role) VALUES ('admin', ?, 'admin')`, [hash]);
