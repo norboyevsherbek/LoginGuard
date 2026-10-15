@@ -7,15 +7,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Umumiy Ranglar va O'zgaruvchilar */
         :root { --bg-body: #0a192f; --bg-sidebar: #112240; --bg-header: #112240; --card-bg: #1e293b; --text-main: #ccd6f6; --text-muted: #8892b0; --accent: #64ffda; --danger: #ef4444; --success: #10b981; --border-color: #233554; }
         [data-theme="light"] { --bg-body: #f1f5f9; --bg-sidebar: #ffffff; --bg-header: #ffffff; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --accent: #3b82f6; --border-color: #e2e8f0; }
         
-        /* ASOSIY SKROLL QOIDASI - BODY HECH QACHON SKROLL BO'LMAYDI */
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden !important; }
         #particles-js { position: fixed; width: 100%; height: 100%; z-index: -1; }
         
-        /* KOMPYUTER EKRANI UCHUN DIZAYN */
         .sidebar { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 1000; transition: 0.3s; flex-shrink: 0;}
         .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
         .nav-menu { display: flex; flex-direction: column; margin-top: 20px; }
@@ -31,7 +28,6 @@
         .user-profile { display: flex; align-items: center; gap: 12px; padding: 8px 18px; background: rgba(100, 255, 218, 0.1); border-radius: 20px; color: var(--accent); font-weight: 600; font-size: 15px; }
         .user-profile img { width: 32px !important; height: 32px !important; border-radius: 50%; object-fit: cover; }
 
-        /* ICHKI KONTENT (FAQAT SHU QISM SKROLL BO'LADI) */
         .content-scroll-area { flex: 1; overflow-y: auto; padding: 30px; width: 100%; box-sizing: border-box; }
         .content-body { max-width: 1200px; margin: 0 auto; width: 100%; }
         
@@ -72,54 +68,17 @@
         .msg-admin { background: var(--danger); color: white; align-self: flex-start; }
         .msg-other { background: rgba(255,255,255,0.1); align-self: flex-start; border-left: 2px solid var(--accent); }
 
-        @media (min-width: 769px) {
-            #mobile-menu-btn { display: none !important; }
-            .mobile-only-profile { display: none !important; }
-        }
-
-        /* ---------------------------------------------------
-           TELEFON EKRANLARI UCHUN YAKUNIY (QOTIRILGAN) DIZAYN
-           --------------------------------------------------- */
+        @media (min-width: 769px) { #mobile-menu-btn { display: none !important; } .mobile-only-profile { display: none !important; } }
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            
             .header-controls { display: none !important; }
             .header { padding: 15px; height: 70px; }
-            
-            /* TUGMA ENDI UMUMAN SILJIMAYDI */
-           #mobile-menu-btn {
-            display: inline-flex !important;
-            align-items: center;
-            position: fixed !important;
-            top: 15px;
-            right: 20px;
-            font-size: 26px;
-            background: transparent;
-            border: none;
-            color: white;
-            z-index: 10001 !important; 
-            cursor: pointer;
-            }
-            
-            .sidebar {
-                position: fixed !important;
-                right: -100% !important; 
-                left: auto !important; 
-                top: 0 !important;
-                width: 280px !important;
-                height: 100vh !important;
-                background-color: var(--bg-sidebar) !important;
-                transition: all 0.3s ease !important;
-                z-index: 10000 !important;
-                box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-                border-right: none;
-            }
-
+            #mobile-menu-btn { display: inline-flex !important; align-items: center; position: fixed !important; top: 15px; right: 20px; font-size: 26px; background: transparent; border: none; color: white; z-index: 10001 !important; cursor: pointer; }
+            .sidebar { position: fixed !important; right: -100% !important; left: auto !important; top: 0 !important; width: 280px !important; height: 100vh !important; background-color: var(--bg-sidebar) !important; transition: all 0.3s ease !important; z-index: 10000 !important; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border-right: none; }
             .sidebar.active { right: 0 !important; }
             .nav-menu { display: flex !important; flex-direction: column !important; width: 100% !important; margin-top: 0 !important; }
             .nav-item { display: flex !important; align-items: center !important; padding: 15px 20px !important; width: 100% !important; box-sizing: border-box !important; border-left: 3px solid transparent !important; border-bottom: none !important; }
             .nav-item.active, .nav-item:hover { border-left-color: var(--accent) !important; }
-
             .content-scroll-area { padding: 15px; }
             .stats-grid { grid-template-columns: 1fr; gap: 15px; }
         }
@@ -128,29 +87,19 @@
 <body>
     <div id="particles-js"></div>
 
-    <!-- TUGMA ICHIGA "MENU" YOZUVI QO'SHILDI (Keshni tekshirish uchun) -->
-    <button id="mobile-menu-btn">&#9776; <span style="font-size: 14px; font-weight: bold; margin-left: 6px;"></span></button>
+    <button id="mobile-menu-btn">&#9776; <span style="font-size: 14px; font-weight: bold; margin-left: 6px;">MENU</span></button>
 
     <div class="sidebar">
         <div class="sidebar-header" style="padding: 20px; border-bottom: 1px solid var(--border-color);">
-            <span>
-                <i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> 
-                <span data-i18n="portal_name">KIBER PORTAL</span>
-            </span>
+            <span><i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> <span data-i18n="portal_name">KIBER PORTAL</span></span>
         </div>
         
         <div class="mobile-only-profile" style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.15);">
             <div style="width: 45px; height: 45px; border-radius: 50%; background: #2c3e50; display: flex; align-items: center; justify-content: center;">
-                <% if (typeof user !== 'undefined' && user && user.avatar) { %>
-                    <img src="<%= user.avatar %>" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
-                <% } else { %>
-                    <i class="fas fa-user-shield" style="color: var(--accent); font-size: 22px;"></i>
-                <% } %>
+                <% if (typeof user !== 'undefined' && user && user.avatar) { %> <img src="<%= user.avatar %>" style="width:100%; height:100%; border-radius:50%; object-fit:cover;"> <% } else { %> <i class="fas fa-user-shield" style="color: var(--accent); font-size: 22px;"></i> <% } %>
             </div>
             <div>
-                <div style="font-weight: bold; color: var(--text-main); font-size: 16px;">
-                    <%= (typeof user !== 'undefined' && user) ? user.username : 'Admin' %>
-                </div>
+                <div style="font-weight: bold; color: var(--text-main); font-size: 16px;"><%= (typeof user !== 'undefined' && user) ? user.username : 'Admin' %></div>
                 <div style="font-size: 12px; color: var(--accent);">Administrator</div>
             </div>
         </div>
@@ -158,59 +107,34 @@
         <div class="nav-menu">
             <a href="/dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> <span data-i18n="nav_dashboard">Bosh panel</span></a>
             <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span>Statistika</span></a>
-            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-                <a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a>
-            <% } %>
+            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a><% } %>
             <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span data-i18n="nav_settings">Profil Sozlamalari</span></a>
             <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> <span data-i18n="nav_sessions">Faol Qurilmalar</span></a>
             <a href="#" class="nav-item" onclick="document.getElementById('contactModal').style.display='flex'"><i class="fas fa-address-book"></i> <span data-i18n="nav_contact">Bog'lanish</span></a>
-            
-            <a href="/logout" class="nav-item mobile-only-profile" style="color: var(--danger); border-top: 1px solid var(--border-color); margin-top: 10px;">
-                <i class="fas fa-sign-out-alt"></i> <span>Chiqish</span>
-            </a>
+            <a href="/logout" class="nav-item mobile-only-profile" style="color: var(--danger); border-top: 1px solid var(--border-color); margin-top: 10px;"><i class="fas fa-sign-out-alt"></i> <span>Chiqish</span></a>
         </div>
     </div>
     
     <div class="main-content">
         <div class="header">
-            <div style="font-weight: 600;">
-                <i class="fas fa-lock" style="color:#8b5cf6;"></i> <span data-i18n="platform_title">LoginGuard Platformasi</span>
-            </div>
-            
+            <div style="font-weight: 600;"><i class="fas fa-lock" style="color:#8b5cf6;"></i> <span data-i18n="platform_title">LoginGuard Platformasi</span></div>
             <div class="header-controls">
                 <div class="notif-wrapper">
                     <div class="notif-bell" onclick="toggleNotifications()">
                         <i class="fas fa-bell" id="bellIcon" style="<%= typeof notifications !== 'undefined' && notifications && notifications.length > 0 ? 'color: var(--danger);' : '' %>"></i>
-                        <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %>
-                            <span class="notif-badge" id="notifBadge"><%= notifications.length %></span>
-                        <% } %>
+                        <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %><span class="notif-badge" id="notifBadge"><%= notifications.length %></span><% } %>
                     </div>
                     <div class="notif-dropdown" id="notifDropdown">
-                        <div class="notif-dropdown-header">
-                            <span><i class="fas fa-exclamation-triangle"></i> Xavfsizlik Ogohlantirishlari</span>
-                            <span style="font-size:11px; cursor:pointer; color:var(--text-muted);" onclick="toggleNotifications()">X</span>
-                        </div>
+                        <div class="notif-dropdown-header"><span><i class="fas fa-exclamation-triangle"></i> Xavfsizlik Ogohlantirishlari</span><span style="font-size:11px; cursor:pointer; color:var(--text-muted);" onclick="toggleNotifications()">X</span></div>
                         <div class="notif-list">
                             <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %>
                                 <% notifications.forEach(n => { %>
-                                    <div class="notif-item">
-                                        <i class="fas fa-shield-cat" style="color: var(--danger); margin-top:2px;"></i>
-                                        <div>
-                                            <div class="notif-item-title"><%= n.title %></div>
-                                            <div class="notif-item-desc"><%= n.msg %></div>
-                                            <div class="notif-item-time"><i class="fas fa-clock"></i> <%= n.time ? new Date(n.time + 'Z').toLocaleString('uz-UZ') : '' %></div>
-                                        </div>
-                                    </div>
+                                    <div class="notif-item"><i class="fas fa-shield-cat" style="color: var(--danger); margin-top:2px;"></i><div><div class="notif-item-title"><%= n.title %></div><div class="notif-item-desc"><%= n.msg %></div><div class="notif-item-time"><i class="fas fa-clock"></i> <%= n.time ? new Date(n.time + 'Z').toLocaleString('uz-UZ') : '' %></div></div></div>
                                 <% }) %>
-                            <% } else { %>
-                                <div style="padding: 15px; text-align: center; color: var(--success); font-size: 13px;">
-                                    <i class="fas fa-check-circle"></i> Yangi xavflar aniqlanmadi!
-                                </div>
-                            <% } %>
+                            <% } else { %> <div style="padding: 15px; text-align: center; color: var(--success); font-size: 13px;"><i class="fas fa-check-circle"></i> Yangi xavflar aniqlanmadi!</div> <% } %>
                         </div>
                     </div>
                 </div>
-
                 <i class="fas fa-moon" id="themeIcon" style="cursor: pointer;" onclick="toggleTheme()"></i>
                 <select id="languageSelect" onchange="changeLanguage(this.value)" style="background:var(--card-bg); color:var(--text-main); border:none; outline:none; padding: 5px;">
                     <option value="uz">UZB</option><option value="en">ENG</option><option value="ru">RUS</option>
@@ -223,20 +147,31 @@
             </div>
         </div>
         
-        <!-- FAQAT SHU QISM SKROLL BO'LADI -->
         <div class="content-scroll-area">
             <div class="content-body">
+                
+                <!-- YANGI QO'SHILGAN FILTR QISMI -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <h2 style="margin: 0; color: var(--text-main); font-size: 20px;">Statistik Xulosalar</h2>
+                    <select onchange="window.location.href='/dashboard?filter=' + this.value" style="padding: 8px 15px; border-radius: 6px; background: var(--bg-header); color: var(--accent); border: 1px solid var(--accent); font-weight: bold; outline: none; cursor: pointer;">
+                        <option value="all" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'all') ? 'selected' : '' %>>Barcha vaqt</option>
+                        <option value="today" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'today') ? 'selected' : '' %>>Bugun (24 soat)</option>
+                        <option value="week" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'week') ? 'selected' : '' %>>Oxirgi 1 hafta</option>
+                        <option value="month" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'month') ? 'selected' : '' %>>Oxirgi 1 oy</option>
+                    </select>
+                </div>
+                
                 <div class="stats-grid">
-                    <div class="stat-card"><div style="font-size:30px; color:var(--accent);"><i class="fas fa-fingerprint"></i></div><div><h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="total_attempts">Jami Urinishlar</h3><div class="value"><%= typeof logs !== 'undefined' && logs ? logs.length : 0 %></div></div></div>
+                    <div class="stat-card"><div style="font-size:30px; color:var(--accent);"><i class="fas fa-fingerprint"></i></div><div><h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="total_attempts">Jami Urinishlar</h3><div class="value"><%= typeof totalLogsCount !== 'undefined' ? totalLogsCount : 0 %></div></div></div>
                     <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-                       <a href="/admin/users" class="stat-card" style="text-decoration:none; color:inherit; cursor:pointer; transition:0.3s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-    <div style="font-size:30px; color:var(--accent);"><i class="fas fa-users-cog"></i></div>
-    <div>
-        <h3 style="margin:0; font-size:14px; color:var(--text-muted);">Barcha Foydalanuvchilar</h3>
-        <div class="value"><%= typeof totalUsers !== 'undefined' ? totalUsers : 0 %></div>
-    </div>
-    <div style="margin-left: auto; color: var(--accent);"><i class="fas fa-arrow-right"></i></div>
-</a>
+                        <a href="/admin/users" class="stat-card" style="text-decoration:none; color:inherit; cursor:pointer; transition:0.3s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                            <div style="font-size:30px; color:var(--accent);"><i class="fas fa-users-cog"></i></div>
+                            <div>
+                                <h3 style="margin:0; font-size:14px; color:var(--text-muted);">Barcha Foydalanuvchilar</h3>
+                                <div class="value"><%= typeof totalUsers !== 'undefined' ? totalUsers : 0 %></div>
+                            </div>
+                            <div style="margin-left: auto; color: var(--accent);"><i class="fas fa-arrow-right"></i></div>
+                        </a>
                         <div class="stat-card" style="border-color: var(--danger);"><div style="font-size:30px; color:var(--danger);"><i class="fas fa-ban"></i></div><div><h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="blocked_ips">Bloklangan IP lar</h3><div class="value" style="color:var(--danger);"><%= typeof blockedIpsCount !== 'undefined' ? blockedIpsCount : 0 %></div></div></div>
                     <% } %>
                 </div>
@@ -251,6 +186,7 @@
                             <table>
                                 <thead><tr>
                                     <th data-i18n="timestamp">Vaqt</th>
+                                    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><th>Foydalanuvchi</th><% } %>
                                     <th data-i18n="ip_address">IP Manzil</th>
                                     <th data-i18n="location">Joylashuv</th>
                                     <th data-i18n="status">Holat</th>
@@ -260,6 +196,9 @@
                                     <% logs.forEach(log => { %>
                                         <tr>
                                             <td><%= log.login_time ? new Date(log.login_time + 'Z').toLocaleString('uz-UZ') : 'Noma\'lum' %></td>
+                                            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+                                                <td style="font-weight: bold; color: var(--text-main);"><%= log.username || 'Noma\'lum' %></td>
+                                            <% } %>
                                             <td style="color: var(--accent); font-family: monospace;"><%= log.ip_address %></td>
                                             <td><%= log.location || "🌍 Noma'lum" %></td>
                                             <td><% if (log.is_blocked) { %> <span class="status" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);" data-i18n="status_blocked">Bloklangan</span> <% } else { %> <span class="status" style="background: rgba(16, 185, 129, 0.1); color: var(--success);" data-i18n="status_success">Muvaffaqiyatli</span> <% } %></td>
@@ -339,40 +278,24 @@
     <script>
         function toggleNotifications() {
             const dropdown = document.getElementById('notifDropdown');
-            if (dropdown) {
-                const isVisible = dropdown.style.display === 'block';
-                dropdown.style.display = isVisible ? 'none' : 'block';
-                if (!isVisible) hideBadgePermanently();
-            }
+            if (dropdown) { const isVisible = dropdown.style.display === 'block'; dropdown.style.display = isVisible ? 'none' : 'block'; if (!isVisible) hideBadgePermanently(); }
         }
-
         function hideBadgePermanently() {
-            const badge = document.getElementById('notifBadge');
-            const bellIcon = document.getElementById('bellIcon');
-            if (badge) badge.style.display = 'none';
-            if (bellIcon) bellIcon.style.color = 'var(--text-muted)';
-            
-            const currentNotifCount = <%= typeof notifications !== 'undefined' && notifications ? notifications.length : 0 %>;
-            localStorage.setItem('read_notifications_count', currentNotifCount);
+            const badge = document.getElementById('notifBadge'); const bellIcon = document.getElementById('bellIcon');
+            if (badge) badge.style.display = 'none'; if (bellIcon) bellIcon.style.color = 'var(--text-muted)';
+            localStorage.setItem('read_notifications_count', <%= typeof notifications !== 'undefined' && notifications ? notifications.length : 0 %>);
         }
-
         document.addEventListener('DOMContentLoaded', () => {
             const currentNotifCount = <%= typeof notifications !== 'undefined' && notifications ? notifications.length : 0 %>;
             const readCount = parseInt(localStorage.getItem('read_notifications_count') || '0', 10);
             if (currentNotifCount > 0 && currentNotifCount <= readCount) {
-                const badge = document.getElementById('notifBadge');
-                const bellIcon = document.getElementById('bellIcon');
-                if (badge) badge.style.display = 'none';
-                if (bellIcon) bellIcon.style.color = 'var(--text-muted)';
+                const badge = document.getElementById('notifBadge'); const bellIcon = document.getElementById('bellIcon');
+                if (badge) badge.style.display = 'none'; if (bellIcon) bellIcon.style.color = 'var(--text-muted)';
             }
         });
-
         document.addEventListener('click', function(event) {
-            const wrapper = document.querySelector('.notif-wrapper');
-            const dropdown = document.getElementById('notifDropdown');
-            if (wrapper && dropdown && !wrapper.contains(event.target)) {
-                dropdown.style.display = 'none';
-            }
+            const wrapper = document.querySelector('.notif-wrapper'); const dropdown = document.getElementById('notifDropdown');
+            if (wrapper && dropdown && !wrapper.contains(event.target)) dropdown.style.display = 'none';
         });
 
         const translations = { 
@@ -382,21 +305,14 @@
         };
         let currentLang = localStorage.getItem('lang') || 'uz'; 
         function changeLanguage(lang) { 
-            currentLang = lang; 
-            localStorage.setItem('lang', lang); 
-            document.querySelectorAll('[data-i18n]').forEach(el => { 
-                if (translations[lang] && translations[lang][el.getAttribute('data-i18n')]) {
-                    el.innerText = translations[lang][el.getAttribute('data-i18n')]; 
-                }
-            }); 
+            currentLang = lang; localStorage.setItem('lang', lang); 
+            document.querySelectorAll('[data-i18n]').forEach(el => { if (translations[lang] && translations[lang][el.getAttribute('data-i18n')]) { el.innerText = translations[lang][el.getAttribute('data-i18n')]; } }); 
         } 
-        document.getElementById('languageSelect').value = currentLang; 
-        changeLanguage(currentLang);
+        document.getElementById('languageSelect').value = currentLang; changeLanguage(currentLang);
 
         function toggleTheme() { 
             let t = localStorage.getItem('theme') === 'dark' ? 'light' : 'dark'; 
-            document.documentElement.setAttribute('data-theme', t); 
-            localStorage.setItem('theme', t); 
+            document.documentElement.setAttribute('data-theme', t); localStorage.setItem('theme', t); 
             document.getElementById('themeIcon').className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon'; 
         } 
         document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
@@ -407,34 +323,17 @@
         const myUsername = "<%= typeof user !== 'undefined' && user ? user.username : 'Mehmon' %>"; 
         const chatSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
         socket.on('message', (data) => { 
-            const m = document.getElementById('chatMessages'); 
-            let c = data.username === myUsername ? 'msg-me' : (data.role === 'admin' ? 'msg-admin' : 'msg-other'); 
+            const m = document.getElementById('chatMessages'); let c = data.username === myUsername ? 'msg-me' : (data.role === 'admin' ? 'msg-admin' : 'msg-other'); 
             m.innerHTML += `<div class="msg ${c}"><b>${data.username}:</b> <br> ${data.text}</div>`; 
-            m.scrollTop = m.scrollHeight; 
-            if (data.username !== myUsername) chatSound.play().catch(e=>{}); 
+            m.scrollTop = m.scrollHeight; if (data.username !== myUsername) chatSound.play().catch(e=>{}); 
         });
-        function sendMessage() { 
-            const i = document.getElementById('chatInput'); 
-            if (i.value.trim() !== "") { 
-                socket.emit('chatMessage', i.value.trim()); 
-                i.value = ''; 
-            } 
-        }
+        function sendMessage() { const i = document.getElementById('chatInput'); if (i.value.trim() !== "") { socket.emit('chatMessage', i.value.trim()); i.value = ''; } }
 
         const menuBtn = document.getElementById('mobile-menu-btn');
         const sidebar = document.querySelector('.sidebar');
-        
         if(menuBtn && sidebar) {
-            menuBtn.addEventListener('click', function(e) {
-                e.stopPropagation(); 
-                sidebar.classList.toggle('active');
-            });
-            
-            document.addEventListener('click', function(e) {
-                if(sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== menuBtn) {
-                    sidebar.classList.remove('active');
-                }
-            });
+            menuBtn.addEventListener('click', function(e) { e.stopPropagation(); sidebar.classList.toggle('active'); });
+            document.addEventListener('click', function(e) { if(sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== menuBtn) sidebar.classList.remove('active'); });
         }
     </script>
 </body>
