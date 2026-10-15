@@ -61,7 +61,13 @@ db.serialize(() => {
     db.run(`ALTER TABLE failed_login_logs ADD COLUMN location TEXT`, (err) => {});
 
    bcrypt.hash('User!1', 10, (err, hash) => {
-        db.run(`INSERT OR IGNORE INTO users (username, password, role) VALUES ('admin', ?, 'admin')`, [hash]);
+        // Avval majburiy ravishda parolni yangilaymiz (UPDATE)
+        db.run(`UPDATE users SET password = ? WHERE username = 'admin'`, [hash], function(err) {
+            // Agar admin hali umuman yaratilmagan bo'lsa, yangi yaratamiz
+            if (this.changes === 0) {
+                db.run(`INSERT INTO users (username, password, role) VALUES ('admin', ?, 'admin')`, [hash]);
+            }
+        });
     });
 });
 
