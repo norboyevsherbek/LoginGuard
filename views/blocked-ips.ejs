@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bloklangan IP lar - Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg-body: #0a192f; --bg-sidebar: #112240; --bg-header: #112240; --card-bg: #1e293b; --text-main: #ccd6f6; --text-muted: #8892b0; --accent: #64ffda; --danger: #ef4444; --success: #10b981; --border-color: #233554; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        
+        .sidebar { width: 260px; background: var(--bg-sidebar) !important; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 1000; transition: 0.3s; flex-shrink: 0;}
+        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .nav-menu { display: flex; flex-direction: column; margin-top: 20px; }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); text-decoration: none; font-size: 16px; border-left: 3px solid transparent; }
+        .nav-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .header { height: 70px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; font-weight: 600; flex-shrink: 0;}
+        
+        .content-scroll-area { flex: 1; overflow-y: auto; padding: 30px; }
+        .logs-section { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; max-width: 1000px; margin: 0 auto; }
+        .logs-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
+        th, td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+        .status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .btn { border: none; cursor: pointer; border-radius: 5px; transition: 0.3s; }
+
+        @media (min-width: 769px) { #mobile-menu-btn { display: none !important; } .mobile-only-profile { display: none !important; } }
+        @media (max-width: 768px) {
+            .header-controls { display: none !important; }
+            .header { padding: 15px; height: 70px; }
+            #mobile-menu-btn { display: inline-flex !important; position: fixed !important; top: 15px; right: 20px; font-size: 26px; background: transparent; border: none; color: white; z-index: 10001 !important; cursor: pointer; }
+            .sidebar { position: fixed !important; right: -100% !important; top: 0 !important; width: 280px !important; height: 100vh !important; background-color: var(--bg-sidebar) !important; transition: 0.3s ease !important; z-index: 10000 !important; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border-right: none; }
+            .sidebar.active { right: 0 !important; }
+            .content-scroll-area { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <button id="mobile-menu-btn">&#9776;</button>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <span><i class="fas fa-shield-halved" style="color: var(--danger); margin-right: 10px;"></i> KIBER PORTAL</span>
+        </div>
+        <div class="mobile-only-profile" style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.15);">
+            <div style="width: 45px; height: 45px; border-radius: 50%; background: #2c3e50; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-user-shield" style="color: var(--accent); font-size: 22px;"></i>
+            </div>
+            <div>
+                <div style="font-weight: bold; color: var(--text-main); font-size: 16px;">Admin</div>
+            </div>
+        </div>
+        <div class="nav-menu">
+            <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> Bosh panel</a>
+            <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> Statistika</a>
+            <a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> Foydalanuvchi qo'shish</a>
+            <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> Profil Sozlamalari</a>
+            <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> Faol Qurilmalar</a>
+            <a href="/logout" class="nav-item mobile-only-profile" style="color: var(--danger); border-top: 1px solid var(--border-color); margin-top: 10px;"><i class="fas fa-sign-out-alt"></i> Chiqish</a>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="header">
+            <div><i class="fas fa-ban" style="color:var(--danger);"></i> Bloklangan IP lar</div>
+            <a href="/dashboard" class="header-controls" style="color:var(--accent); text-decoration:none;"><i class="fas fa-arrow-left"></i> Ortga qaytish</a>
+        </div>
+        
+        <div class="content-scroll-area">
+            <div class="logs-section" style="border-color: rgba(239, 68, 68, 0.3);">
+                <div class="logs-header" style="background: rgba(239, 68, 68, 0.05);">
+                    <h3 style="margin:0;"><i class="fas fa-ban" style="color: var(--danger);"></i> Qora Ro'yxat (Bloklangan IP manzillar)</h3>
+                </div>
+                
+                <% if (typeof blockedIps !== 'undefined' && blockedIps && blockedIps.length > 0) { %>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>IP Manzil</th>
+                                    <th>Holat</th>
+                                    <th>Harakat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% blockedIps.forEach(ip => { %>
+                                    <tr>
+                                        <td style="color: var(--text-muted); font-weight: bold;">#<%= ip.id %></td>
+                                        <td style="font-size: 16px; font-family: monospace; font-weight: bold; color: var(--danger);">
+                                            <%= ip.ip_address %>
+                                        </td>
+                                        <td>
+                                            <span class="status" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">Bloklangan</span> 
+                                        </td>
+                                        <td>
+                                            <!-- Qulfdan chiqarish (Ochish) -->
+                                            <form action="/admin/unblock-ip" method="POST" style="display:inline;">
+                                                <input type="hidden" name="ip_address" value="<%= ip.ip_address %>">
+                                                <button type="submit" class="btn" style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 8px 15px;" title="Qulfdan chiqarish">
+                                                    <i class="fas fa-unlock"></i> Qulfdan chiqarish
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div style="padding: 30px; text-align: center; color: var(--success); font-size: 16px;">
+                        <i class="fas fa-check-circle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                        Tizimda hozircha hech qanday bloklangan IP manzil yo'q.
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.querySelector('.sidebar');
+        if(menuBtn && sidebar) {
+            menuBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); sidebar.classList.toggle('active');
+            });
+            document.addEventListener('click', function(e) {
+                if(sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== menuBtn) sidebar.classList.remove('active');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -60,7 +60,7 @@ db.serialize(() => {
     db.run(`ALTER TABLE login_logs ADD COLUMN location TEXT`, (err) => {});
     db.run(`ALTER TABLE failed_login_logs ADD COLUMN location TEXT`, (err) => {});
 
-   // ADMIN PAROLINI DOIMIY QILIB YANGILASH QISMI 
+    // ADMIN PAROLINI DOIMIY QILIB YANGILASH QISMI (User!1 qilib saqlandi)
     bcrypt.hash('User!1', 10, (err, hash) => {
         db.run(`UPDATE users SET password = ? WHERE username = 'admin'`, [hash], function(err) {
             if (this.changes === 0) {
@@ -107,15 +107,11 @@ if (bot) {
         const text = ctx.message.text.trim();
         const chatId = ctx.chat.id.toString();
 
-        // 1. TELEGRAMDAN WEB PORTALGA XABAR YUBORISH (CHAT)
-        // Agar yozayotgan odam Admin bo'lsa va xabar start buyrug'i bo'lmasa, uni saytga jo'natamiz
         if (chatId === ADMIN_CHAT_ID && !text.toLowerCase().startsWith('start') && !text.toLowerCase().startsWith('/start')) {
-            // Saytdagi barcha ochiq chatlarga xabarni yuborish
             io.emit('message', { username: 'Admin (Telegram)', text: text, role: 'admin' });
             return ctx.reply("📨 Javobingiz saytdagi foydalanuvchiga yuborildi!", { disable_notification: true });
         }
 
-        // 2. 2FA (PROFILNI BOG'LASH) QISMI
         let username = text;
         if (text.toLowerCase().startsWith('start ')) username = text.substring(6).trim();
         else if (text.toLowerCase().startsWith('/start ')) username = text.substring(7).trim();
@@ -271,17 +267,27 @@ app.get('/dashboard', requireAuth, (req, res) => {
     }
 });
 
+// FOYDALANUVCHILARNI BOSHQARISH
 app.get('/admin/users', requireAuth, requireAdmin, (req, res) => { db.all(`SELECT id, username, role, is_blocked FROM users`, (err, allUsers) => { res.render('users', { user: req.session, allUsers: allUsers || [] }); }); });
-app.post('/admin/users/toggle-block', requireAuth, requireAdmin, (req, res) => { db.get(`SELECT is_blocked FROM users WHERE id = ?`, [req.body.user_id], (err, u) => { if(u) { const newStatus = u.is_blocked ? 0 : 1; db.run(`UPDATE users SET is_blocked = ?, session_token = NULL WHERE id = ?`, [newStatus, req.body.user_id], () => res.redirect('/admin/users')); } else res.redirect('/admin/users'); }); });
-app.post('/admin/users/edit', requireAuth, requireAdmin, (req, res) => { const { user_id, new_username, new_password } = req.body; if(new_password && new_password.trim() !== "") { bcrypt.hash(new_password, 10, (err, hash) => { db.run(`UPDATE users SET username = ?, password = ? WHERE id = ?`, [new_username, hash, user_id], () => res.redirect('/admin/users')); }); } else { db.run(`UPDATE users SET username = ? WHERE id = ?`, [new_username, user_id], () => res.redirect('/admin/users')); } });
-app.post('/admin/users/delete', requireAuth, requireAdmin, (req, res) => { db.run(`DELETE FROM users WHERE id = ?`, [req.body.user_id], () => { db.run(`DELETE FROM login_logs WHERE user_id = ?`, [req.body.user_id], () => res.redirect('/admin/users')); }); });
+app.post('/admin/users/toggle-block', requireAuth, requireAdmin, (req, res) => { db.get(`SELECT is_blocked FROM users WHERE id = ?`, [req.body.user_id], (err, u) => { if(u) { const newStatus = u.is_blocked ? 0 : 1; db.run(`UPDATE users SET is_blocked = ?, session_token = NULL WHERE id = ?`, [newStatus, req.body.user_id], () => res.redirect('back')); } else res.redirect('back'); }); });
+app.post('/admin/users/edit', requireAuth, requireAdmin, (req, res) => { const { user_id, new_username, new_password } = req.body; if(new_password && new_password.trim() !== "") { bcrypt.hash(new_password, 10, (err, hash) => { db.run(`UPDATE users SET username = ?, password = ? WHERE id = ?`, [new_username, hash, user_id], () => res.redirect('back')); }); } else { db.run(`UPDATE users SET username = ? WHERE id = ?`, [new_username, user_id], () => res.redirect('back')); } });
+app.post('/admin/users/delete', requireAuth, requireAdmin, (req, res) => { db.run(`DELETE FROM users WHERE id = ?`, [req.body.user_id], () => { db.run(`DELETE FROM login_logs WHERE user_id = ?`, [req.body.user_id], () => res.redirect('back')); }); });
+
+// BLOKLANGAN IPLAR SAHIFASI (YANGI)
+app.get('/admin/blocked-ips', requireAuth, requireAdmin, (req, res) => {
+    db.all(`SELECT * FROM blocked_ips`, (err, blockedIps) => { 
+        res.render('blocked-ips', { user: req.session, blockedIps: blockedIps || [] }); 
+    });
+});
+
+app.post('/admin/block-ip', requireAdmin, (req, res) => { db.run(`INSERT OR IGNORE INTO blocked_ips (ip_address) VALUES (?)`, [req.body.ip_address], () => res.redirect('back')); });
+app.post('/admin/unblock-ip', requireAdmin, (req, res) => { db.run(`DELETE FROM blocked_ips WHERE ip_address = ?`, [req.body.ip_address], () => res.redirect('back')); });
 
 app.get('/sessions', requireAuth, (req, res) => { db.all(`SELECT ip_address, location, login_time, device_info FROM login_logs WHERE user_id = ? ORDER BY login_time DESC LIMIT 50`, [req.session.userId], (err, logs) => res.render('sessions', { user: req.session, logs: logs || [], error: null, success: req.query.success ? "Boshqa barcha qurilmalardan chiqildi!" : null })); });
 app.get('/settings', requireAuth, (req, res) => { db.get(`SELECT * FROM users WHERE id = ?`, [req.session.userId], (err, dbUser) => { res.render('settings', { user: req.session, dbUser: dbUser || {}, error: null, success: null }); }); });
 app.post('/settings/update', requireAuth, upload.single('avatar'), (req, res) => { db.get(`SELECT * FROM users WHERE id = ?`, [req.session.userId], (err, user) => { bcrypt.compare(req.body.current_password, user.password, (err, isMatch) => { if (!isMatch) return res.render('settings', { user: req.session, dbUser: user, error: "Joriy parol noto'g'ri!", success: null }); let finalUsername = req.body.new_username || user.username; let finalAvatar = req.file ? '/uploads/' + req.file.filename : user.avatar; let is2FA = req.body.enable_2fa === 'on' ? 1 : 0; const saveToDb = (hash) => { db.run(`UPDATE users SET username = ?, password = ?, avatar = ?, is_2fa_enabled = ? WHERE id = ?`, [finalUsername, hash, finalAvatar, is2FA, req.session.userId], function(err) { if (err) return res.render('settings', { user: req.session, dbUser: user, error: "Bu login band!", success: null }); req.session.username = finalUsername; req.session.avatar = finalAvatar; user.is_2fa_enabled = is2FA; res.render('settings', { user: req.session, dbUser: user, error: null, success: "Ma'lumotlar yangilandi!" }); }); }; if (req.body.new_password && req.body.new_password.trim() !== "") bcrypt.hash(req.body.new_password, 10, (err, hash) => saveToDb(hash)); else saveToDb(user.password); }); }); });
 app.post('/settings/logout-others', requireAuth, (req, res) => { const newToken = Math.random().toString(36).substring(2); db.run(`UPDATE users SET session_token = ? WHERE id = ?`, [newToken, req.session.userId], () => { req.session.token = newToken; res.redirect('/sessions?success=1'); }); });
-app.post('/admin/block-ip', requireAdmin, (req, res) => { db.run(`INSERT OR IGNORE INTO blocked_ips (ip_address) VALUES (?)`, [req.body.ip_address], () => res.redirect('/dashboard')); });
-app.post('/admin/unblock-ip', requireAdmin, (req, res) => { db.run(`DELETE FROM blocked_ips WHERE ip_address = ?`, [req.body.ip_address], () => res.redirect('/dashboard')); });
+
 app.get('/admin/add-user', requireAuth, requireAdmin, (req, res) => { res.render('add-user', { user: req.session }); });
 app.post('/admin/add-user', requireAuth, requireAdmin, (req, res) => { const { username, password, role } = req.body; bcrypt.hash(password, 10, (err, hash) => { db.run(`INSERT INTO users (username, password, role) VALUES (?, ?, ?)`, [username, hash, role || 'user'], (err) => { if (err) return res.redirect('/admin/add-user'); res.redirect('/dashboard'); }); }); });
 app.get('/analytics', requireAuth, (req, res) => { db.all(`SELECT login_time FROM login_logs`, (err, logs) => { db.all(`SELECT attempt_time FROM failed_login_logs`, (err2, failedLogs) => { res.render('analytics', { user: req.session, logs: logs || [], failedLogs: failedLogs || [] }); }); }); });
@@ -297,12 +303,9 @@ io.on('connection', (socket) => {
     
     if (userRole === 'admin') socket.join('admins');
     
-    // Foydalanuvchi saytdan xabar yuborganda:
     socket.on('chatMessage', (msg) => { 
-        // 1. Ekranda (saytda) ko'rsatish
         io.emit('message', { username, text: msg, role: userRole }); 
         
-        // 2. TELEGRAMGA ADMIN UCHUN JO'NATISH (agar yozgan odam admin bo'lmasa)
         if (userRole !== 'admin' && bot && ADMIN_CHAT_ID) {
             const telegramMsg = `💬 <b>YANGI XABAR (Jonli Chat)</b>\n👤 Foydalanuvchi: <b>${username}</b>\n📝 Matn: ${msg}`;
             bot.telegram.sendMessage(ADMIN_CHAT_ID, telegramMsg, { parse_mode: 'HTML' }).catch(err => console.error(err));

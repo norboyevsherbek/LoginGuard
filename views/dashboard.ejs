@@ -172,7 +172,14 @@
                             </div>
                             <div style="margin-left: auto; color: var(--accent);"><i class="fas fa-arrow-right"></i></div>
                         </a>
-                        <div class="stat-card" style="border-color: var(--danger);"><div style="font-size:30px; color:var(--danger);"><i class="fas fa-ban"></i></div><div><h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="blocked_ips">Bloklangan IP lar</h3><div class="value" style="color:var(--danger);"><%= typeof blockedIpsCount !== 'undefined' ? blockedIpsCount : 0 %></div></div></div>
+                       <a href="/admin/blocked-ips" class="stat-card" style="border-color: var(--danger); text-decoration:none; color:inherit; cursor:pointer; transition:0.3s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+    <div style="font-size:30px; color:var(--danger);"><i class="fas fa-ban"></i></div>
+    <div>
+        <h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="blocked_ips">Bloklangan IP lar</h3>
+        <div class="value" style="color:var(--danger);"><%= typeof blockedIpsCount !== 'undefined' ? blockedIpsCount : 0 %></div>
+    </div>
+    <div style="margin-left: auto; color: var(--danger);"><i class="fas fa-arrow-right"></i></div>
+</a>
                     <% } %>
                 </div>
                 
