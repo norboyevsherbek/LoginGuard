@@ -229,7 +229,14 @@
                 <div class="stats-grid">
                     <div class="stat-card"><div style="font-size:30px; color:var(--accent);"><i class="fas fa-fingerprint"></i></div><div><h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="total_attempts">Jami Urinishlar</h3><div class="value"><%= typeof logs !== 'undefined' && logs ? logs.length : 0 %></div></div></div>
                     <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-                        <div class="stat-card"><div style="font-size:30px; color:var(--accent);"><i class="fas fa-users"></i></div><div><h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="total_users">Foydalanuvchilar</h3><div class="value"><%= typeof logs !== 'undefined' && logs ? [...new Set(logs.map(l => l.username))].length : 0 %></div></div></div>
+                       <a href="/admin/users" class="stat-card" style="text-decoration:none; color:inherit; cursor:pointer; transition:0.3s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+    <div style="font-size:30px; color:var(--accent);"><i class="fas fa-users-cog"></i></div>
+    <div>
+        <h3 style="margin:0; font-size:14px; color:var(--text-muted);">Barcha Foydalanuvchilar</h3>
+        <div class="value"><%= typeof totalUsers !== 'undefined' ? totalUsers : 0 %></div>
+    </div>
+    <div style="margin-left: auto; color: var(--accent);"><i class="fas fa-arrow-right"></i></div>
+</a>
                         <div class="stat-card" style="border-color: var(--danger);"><div style="font-size:30px; color:var(--danger);"><i class="fas fa-ban"></i></div><div><h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="blocked_ips">Bloklangan IP lar</h3><div class="value" style="color:var(--danger);"><%= typeof blockedIpsCount !== 'undefined' ? blockedIpsCount : 0 %></div></div></div>
                     <% } %>
                 </div>

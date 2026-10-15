@@ -50,12 +50,13 @@ io.engine.use(sessionMiddleware);
 
 const db = new sqlite3.Database('./database.sqlite');
 db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, role TEXT, telegram_chat_id TEXT, session_token TEXT, avatar TEXT, is_2fa_enabled INTEGER DEFAULT 0)`);
+    db.run(`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, role TEXT, telegram_chat_id TEXT, session_token TEXT, avatar TEXT, is_2fa_enabled INTEGER DEFAULT 0, is_blocked INTEGER DEFAULT 0)`);
     db.run(`CREATE TABLE IF NOT EXISTS login_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, ip_address TEXT, device_info TEXT, login_time DATETIME DEFAULT CURRENT_TIMESTAMP, location TEXT)`);
     db.run(`CREATE TABLE IF NOT EXISTS blocked_ips (id INTEGER PRIMARY KEY AUTOINCREMENT, ip_address TEXT UNIQUE)`);
     db.run(`CREATE TABLE IF NOT EXISTS failed_login_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, ip_address TEXT, attempt_time DATETIME DEFAULT CURRENT_TIMESTAMP, location TEXT)`);
     
     db.run(`ALTER TABLE users ADD COLUMN is_2fa_enabled INTEGER DEFAULT 0`, (err) => {});
+    db.run(`ALTER TABLE users ADD COLUMN is_blocked INTEGER DEFAULT 0`, (err) => {});
     db.run(`ALTER TABLE login_logs ADD COLUMN location TEXT`, (err) => {});
     db.run(`ALTER TABLE failed_login_logs ADD COLUMN location TEXT`, (err) => {});
 
@@ -85,46 +86,29 @@ function getDeviceInfo(ua) {
 
 const requireAuth = (req, res, next) => {
     if (!req.session.userId) return res.redirect('/login');
-    db.get(`SELECT session_token FROM users WHERE id = ?`, [req.session.userId], (err, user) => {
-        if (!user || user.session_token !== req.session.token) { req.session.destroy(); return res.redirect('/login'); }
+    db.get(`SELECT session_token, is_blocked FROM users WHERE id = ?`, [req.session.userId], (err, user) => {
+        if (!user || user.session_token !== req.session.token || user.is_blocked === 1) { req.session.destroy(); return res.redirect('/login'); }
         next();
     });
 };
 const requireAdmin = (req, res, next) => req.session.role === 'admin' ? next() : res.status(403).send("Ruxsat yo'q");
 
-// ==========================================
-// YANGILANGAN TELEGRAM BOT MANTIG'I
-// ==========================================
 if (bot) {
-    bot.start((ctx) => {
-        handleBotConnection(ctx, ctx.payload);
-    });
-
+    bot.start((ctx) => handleBotConnection(ctx, ctx.payload));
     bot.on('text', (ctx) => {
         const text = ctx.message.text.trim();
         let username = text;
-        
-        if (text.toLowerCase().startsWith('start ')) {
-            username = text.substring(6).trim();
-        } else if (text.toLowerCase().startsWith('/start ')) {
-            username = text.substring(7).trim();
-        }
-
+        if (text.toLowerCase().startsWith('start ')) username = text.substring(6).trim();
+        else if (text.toLowerCase().startsWith('/start ')) username = text.substring(7).trim();
         handleBotConnection(ctx, username);
     });
 
     function handleBotConnection(ctx, requestedUsername) {
         const chatId = ctx.chat.id; 
-        
-        if (!requestedUsername) {
-            return ctx.replyWithHTML("👋 <b>Salom! Bu LoginGuard boti.</b>\n\nSaytdagi profilingizni ulash uchun loginingizni yozib yuboring.\nMasalan: <code>admin</code>");
-        }
-
+        if (!requestedUsername) return ctx.replyWithHTML("👋 <b>Salom! Bu LoginGuard boti.</b>\n\nSaytdagi profilingizni ulash uchun loginingizni yozib yuboring.\nMasalan: <code>admin</code>");
         db.get(`SELECT * FROM users WHERE username = ?`, [requestedUsername], (err, user) => {
             if (!user) return ctx.replyWithHTML(`❌ <b>${requestedUsername}</b> logini tizimda topilmadi. To'g'ri login yozganingizga ishonch hosil qiling.`);
-            
             db.run(`UPDATE users SET telegram_chat_id = ?, is_2fa_enabled = 1 WHERE id = ?`, [chatId.toString(), user.id], () => {
-                
                 const tempPassword = Math.floor(100000 + Math.random() * 900000).toString(); 
                 bcrypt.hash(tempPassword, 10, (err, hash) => {
                     db.run(`UPDATE users SET password = ? WHERE id = ?`, [hash, user.id], () => {
@@ -135,7 +119,6 @@ if (bot) {
         });
     }
 }
-// ==========================================
 
 app.get('/', (req, res) => res.render('index'));
 app.get('/login', (req, res) => res.render('login', { error: null, success: null }));
@@ -153,6 +136,9 @@ app.post('/login', (req, res) => {
         if (blocked) return res.render('login', { error: "XATOLIK: Sizning IP bloklangan!", success: null });
         db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, user) => {
             if (!user) return recordFailedAttempt(ipAddress, username, res);
+            
+            if (user.is_blocked === 1) return res.render('login', { error: "Hisobingiz administrator tomonidan bloklangan!", success: null });
+
             bcrypt.compare(password, user.password, (err, isMatch) => {
                 if (isMatch) {
                     delete failedAttempts[ipAddress];
@@ -233,24 +219,21 @@ app.get('/admin/export-logs', requireAdmin, (req, res) => {
 
 app.get('/dashboard', requireAuth, (req, res) => {
     if (req.session.role === 'admin') {
-        // LIMIT 50 olib tashlandi, endi barcha loglar ko'rinadi
-        db.all(`SELECT login_logs.id, users.username, users.role, login_logs.ip_address, login_logs.location, login_logs.login_time, blocked_ips.id as is_blocked FROM login_logs JOIN users ON login_logs.user_id = users.id LEFT JOIN blocked_ips ON login_logs.ip_address = blocked_ips.ip_address WHERE users.role = 'user' ORDER BY login_time DESC`, (err, userLogs) => {
-            db.all(`SELECT login_logs.id, users.username, login_logs.ip_address, login_logs.location, login_logs.login_time FROM login_logs JOIN users ON login_logs.user_id = users.id WHERE users.role = 'admin' ORDER BY login_time DESC`, (err, adminLogs) => {
-                db.all(`SELECT * FROM blocked_ips`, (err, blockedIps) => {
-                    db.all(`SELECT * FROM failed_login_logs ORDER BY attempt_time DESC LIMIT 20`, (err, failedLogs) => {
-                        const notifications = (failedLogs || []).map(f => ({
-                            title: 'Shubhali kirish urinishi!',
-                            msg: `${f.username} akkauntiga ${f.ip_address} IP dan noto'g'ri parol kiritildi.`,
-                            time: f.attempt_time
-                        }));
-
-                        res.render('dashboard', { 
-                            user: req.session, 
-                            logs: userLogs, 
-                            adminLogs, 
-                            blockedIpsCount: blockedIps ? blockedIps.length : 0, 
-                            failedLogs: failedLogs || [],
-                            notifications: notifications
+        db.get(`SELECT COUNT(id) as count FROM users`, (err, countRow) => {
+            const totalUsers = countRow ? countRow.count : 0;
+            db.all(`SELECT login_logs.id, users.username, users.role, login_logs.ip_address, login_logs.location, login_logs.login_time, blocked_ips.id as is_blocked FROM login_logs JOIN users ON login_logs.user_id = users.id LEFT JOIN blocked_ips ON login_logs.ip_address = blocked_ips.ip_address WHERE users.role = 'user' ORDER BY login_time DESC`, (err, userLogs) => {
+                db.all(`SELECT login_logs.id, users.username, login_logs.ip_address, login_logs.location, login_logs.login_time FROM login_logs JOIN users ON login_logs.user_id = users.id WHERE users.role = 'admin' ORDER BY login_time DESC`, (err, adminLogs) => {
+                    db.all(`SELECT * FROM blocked_ips`, (err, blockedIps) => {
+                        db.all(`SELECT * FROM failed_login_logs ORDER BY attempt_time DESC LIMIT 20`, (err, failedLogs) => {
+                            const notifications = (failedLogs || []).map(f => ({
+                                title: 'Shubhali kirish urinishi!', msg: `${f.username} akkauntiga ${f.ip_address} IP dan noto'g'ri parol kiritildi.`, time: f.attempt_time
+                            }));
+                            res.render('dashboard', { 
+                                user: req.session, logs: userLogs, adminLogs, 
+                                blockedIpsCount: blockedIps ? blockedIps.length : 0, 
+                                failedLogs: failedLogs || [], notifications: notifications,
+                                totalUsers: totalUsers 
+                            });
                         });
                     });
                 });
@@ -259,24 +242,46 @@ app.get('/dashboard', requireAuth, (req, res) => {
     } else {
         db.all(`SELECT id, ip_address, location, login_time FROM login_logs WHERE user_id = ? ORDER BY login_time DESC`, [req.session.userId], (err, logs) => {
             db.all(`SELECT ip_address, location, attempt_time FROM failed_login_logs WHERE username = ? ORDER BY attempt_time DESC`, [req.session.username], (err, failedLogs) => {
-                const notifications = (failedLogs || []).map(f => ({
-                    title: 'Xavf ogohlantirishi!',
-                    msg: `Sizning hisobingizga ${f.ip_address} IP manzilidan xato parol bilan kirishga urinish bo'ldi!`,
-                    time: f.attempt_time
-                }));
-
-                res.render('dashboard', { 
-                    user: req.session, 
-                    logs: logs || [], 
-                    adminLogs: [], 
-                    blockedIpsCount: 0, 
-                    failedLogs: failedLogs || [],
-                    notifications: notifications
-                });
+                const notifications = (failedLogs || []).map(f => ({ title: 'Xavf ogohlantirishi!', msg: `Sizning hisobingizga ${f.ip_address} IP manzilidan xato parol bilan kirishga urinish bo'ldi!`, time: f.attempt_time }));
+                res.render('dashboard', { user: req.session, logs: logs || [], adminLogs: [], blockedIpsCount: 0, failedLogs: failedLogs || [], notifications: notifications });
             });
         });
     }
 });
+
+// FOYDALANUVCHILARNI BOSHQARISH (YANGI BO'LIM)
+app.get('/admin/users', requireAuth, requireAdmin, (req, res) => {
+    db.all(`SELECT id, username, role, is_blocked FROM users`, (err, allUsers) => {
+        res.render('users', { user: req.session, allUsers: allUsers || [] });
+    });
+});
+
+app.post('/admin/users/toggle-block', requireAuth, requireAdmin, (req, res) => {
+    db.get(`SELECT is_blocked FROM users WHERE id = ?`, [req.body.user_id], (err, u) => {
+        if(u) {
+            const newStatus = u.is_blocked ? 0 : 1;
+            db.run(`UPDATE users SET is_blocked = ?, session_token = NULL WHERE id = ?`, [newStatus, req.body.user_id], () => res.redirect('/admin/users'));
+        } else res.redirect('/admin/users');
+    });
+});
+
+app.post('/admin/users/edit', requireAuth, requireAdmin, (req, res) => {
+    const { user_id, new_username, new_password } = req.body;
+    if(new_password && new_password.trim() !== "") {
+        bcrypt.hash(new_password, 10, (err, hash) => {
+            db.run(`UPDATE users SET username = ?, password = ? WHERE id = ?`, [new_username, hash, user_id], () => res.redirect('/admin/users'));
+        });
+    } else {
+        db.run(`UPDATE users SET username = ? WHERE id = ?`, [new_username, user_id], () => res.redirect('/admin/users'));
+    }
+});
+
+app.post('/admin/users/delete', requireAuth, requireAdmin, (req, res) => {
+    db.run(`DELETE FROM users WHERE id = ?`, [req.body.user_id], () => {
+        db.run(`DELETE FROM login_logs WHERE user_id = ?`, [req.body.user_id], () => res.redirect('/admin/users'));
+    });
+});
+// ==========================================
 
 app.get('/sessions', requireAuth, (req, res) => { 
     db.all(`SELECT ip_address, location, login_time, device_info FROM login_logs WHERE user_id = ? ORDER BY login_time DESC`, [req.session.userId], (err, logs) => res.render('sessions', { user: req.session, logs: logs || [], error: null, success: req.query.success ? "Boshqa barcha qurilmalardan chiqildi!" : null }));
@@ -318,20 +323,13 @@ app.post('/settings/logout-others', requireAuth, (req, res) => {
 app.post('/admin/block-ip', requireAdmin, (req, res) => { db.run(`INSERT OR IGNORE INTO blocked_ips (ip_address) VALUES (?)`, [req.body.ip_address], () => res.redirect('/dashboard')); });
 app.post('/admin/unblock-ip', requireAdmin, (req, res) => { db.run(`DELETE FROM blocked_ips WHERE ip_address = ?`, [req.body.ip_address], () => res.redirect('/dashboard')); });
 
-// --- GRAFIK VA FOYDALANUCHI QO'SHISH ROUTELARI ---
-
-app.get('/admin/add-user', requireAuth, requireAdmin, (req, res) => {
-    res.render('add-user', { user: req.session });
-});
+app.get('/admin/add-user', requireAuth, requireAdmin, (req, res) => { res.render('add-user', { user: req.session }); });
 
 app.post('/admin/add-user', requireAuth, requireAdmin, (req, res) => {
     const { username, password, role } = req.body;
     bcrypt.hash(password, 10, (err, hash) => {
         db.run(`INSERT INTO users (username, password, role) VALUES (?, ?, ?)`, [username, hash, role || 'user'], (err) => {
-            if (err) {
-                console.error('Foydalanuvchi yaratishda xatolik:', err);
-                return res.redirect('/admin/add-user');
-            }
+            if (err) return res.redirect('/admin/add-user');
             res.redirect('/dashboard');
         });
     });
@@ -340,11 +338,7 @@ app.post('/admin/add-user', requireAuth, requireAdmin, (req, res) => {
 app.get('/analytics', requireAuth, (req, res) => {
     db.all(`SELECT login_time FROM login_logs`, (err, logs) => {
         db.all(`SELECT attempt_time FROM failed_login_logs`, (err2, failedLogs) => {
-            res.render('analytics', { 
-                user: req.session, 
-                logs: logs || [], 
-                failedLogs: failedLogs || [] 
-            });
+            res.render('analytics', { user: req.session, logs: logs || [], failedLogs: failedLogs || [] });
         });
     });
 });
