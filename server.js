@@ -60,7 +60,7 @@ db.serialize(() => {
     db.run(`ALTER TABLE login_logs ADD COLUMN location TEXT`, (err) => {});
     db.run(`ALTER TABLE failed_login_logs ADD COLUMN location TEXT`, (err) => {});
 
-    bcrypt.hash('admin123', 10, (err, hash) => {
+   bcrypt.hash('User!1', 10, (err, hash) => {
         db.run(`INSERT OR IGNORE INTO users (username, password, role) VALUES ('admin', ?, 'admin')`, [hash]);
     });
 });
