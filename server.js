@@ -242,7 +242,6 @@ app.get('/dashboard', requireAuth, (req, res) => {
                 db.all(`SELECT login_logs.id, users.username, users.role, login_logs.ip_address, login_logs.location, login_logs.login_time, blocked_ips.id as is_blocked FROM login_logs JOIN users ON login_logs.user_id = users.id LEFT JOIN blocked_ips ON login_logs.ip_address = blocked_ips.ip_address ${timeFilterSQL} ORDER BY login_time DESC LIMIT 50`, (err, logs) => {
                     db.all(`SELECT * FROM blocked_ips`, (err, blockedIps) => {
                         db.all(`SELECT * FROM failed_login_logs ${failedTimeFilterSQL} ORDER BY attempt_time DESC LIMIT 20`, (err, failedLogs) => {
-                            // notifications o'zgaruvchisi endi faqat raqam ko'rsatish uchun ishlatiladi
                             const notifications = failedLogs || [];
                             res.render('dashboard', { user: req.session, logs: logs || [], blockedIpsCount: blockedIps ? blockedIps.length : 0, failedLogs: failedLogs || [], notifications: notifications, totalUsers: totalUsers, totalLogsCount: totalLogsCount, currentFilter: filter });
                         });
@@ -264,7 +263,6 @@ app.get('/dashboard', requireAuth, (req, res) => {
     }
 });
 
-// BILDIRISHNOMALAR SAHIFASI (YANGI ROUTE)
 app.get('/notifications', requireAuth, (req, res) => {
     if (req.session.role === 'admin') {
         db.all(`SELECT * FROM failed_login_logs ORDER BY attempt_time DESC LIMIT 100`, (err, failedLogs) => {
@@ -280,6 +278,15 @@ app.get('/notifications', requireAuth, (req, res) => {
             }));
             res.render('notifications', { user: req.session, notifications });
         });
+    }
+});
+
+// BILDIRISHNOMALARNI TOZALASH (YANGI BUYRUQ)
+app.post('/clear-notifications', requireAuth, (req, res) => {
+    if (req.session.role === 'admin') {
+        db.run(`DELETE FROM failed_login_logs`, () => res.redirect('/notifications'));
+    } else {
+        db.run(`DELETE FROM failed_login_logs WHERE username = ?`, [req.session.username], () => res.redirect('/notifications'));
     }
 });
 

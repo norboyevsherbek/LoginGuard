@@ -27,6 +27,7 @@
         .notif-title { font-size: 16px; font-weight: bold; margin-bottom: 8px; color: var(--danger); }
         .notif-text { color: var(--text-main); font-size: 14px; margin-bottom: 10px; line-height: 1.5; }
         .notif-time { color: var(--text-muted); font-size: 12px; font-weight: bold; }
+        .btn { padding: 10px 18px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 14px; display: inline-block; outline: none; }
 
         @media (min-width: 769px) { #mobile-menu-btn { display: none !important; } .mobile-only-profile { display: none !important; } }
         @media (max-width: 768px) {
@@ -75,8 +76,21 @@
         
         <div class="content-scroll-area">
             <div style="max-width: 900px; margin: 0 auto;">
-                <h2 style="color: var(--text-main); margin-top: 0;"><i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Xavfsizlik ogohlantirishlari</h2>
-                <p style="color: var(--text-muted); margin-bottom: 25px;">Tizimga noqonuniy kirishga urinishlar va xato parollar tarixi.</p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 style="color: var(--text-main); margin-top: 0; margin-bottom: 8px;"><i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Xavfsizlik ogohlantirishlari</h2>
+                        <p style="color: var(--text-muted); margin: 0;">Tizimga noqonuniy kirishga urinishlar va xato parollar tarixi.</p>
+                    </div>
+                    
+                    <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %>
+                        <form action="/clear-notifications" method="POST">
+                            <button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); font-weight: bold; border: 1px solid rgba(239, 68, 68, 0.3); transition: 0.3s;" onmouseover="this.style.background='var(--danger)'; this.style.color='white';" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='var(--danger)';">
+                                <i class="fas fa-trash-alt"></i> Barchasini tozalash
+                            </button>
+                        </form>
+                    <% } %>
+                </div>
                 
                 <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %>
                     <% notifications.forEach(n => { %>
@@ -100,10 +114,6 @@
     </div>
 
     <script>
-        // MANA SHU QISM YANGI QO'SHILDI: Xabarlarni "o'qildi" deb saqlash
-        const currentNotifCount = <%= typeof notifications !== 'undefined' && notifications ? notifications.length : 0 %>;
-        localStorage.setItem('read_notifications_count', currentNotifCount);
-
         const menuBtn = document.getElementById('mobile-menu-btn');
         const sidebar = document.querySelector('.sidebar');
         if(menuBtn && sidebar) {
