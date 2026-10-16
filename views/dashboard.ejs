@@ -25,8 +25,21 @@
         .header-controls { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; }
         .header-controls i { font-size: 22px !important; cursor: pointer; }
         .btn { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; font-size: 16px; display: inline-block;}
-        .user-profile { display: flex; align-items: center; gap: 12px; padding: 8px 18px; background: rgba(100, 255, 218, 0.1); border-radius: 20px; color: var(--accent); font-weight: 600; font-size: 15px; }
+        
+        /* Profil tugmasi va ochiluvchi oyna uchun maxsus dizayn */
+        .profile-wrapper { position: relative; display: inline-block; }
+        .user-profile { display: flex; align-items: center; gap: 12px; padding: 8px 18px; background: rgba(100, 255, 218, 0.1); border-radius: 20px; color: var(--accent); font-weight: 600; font-size: 15px; cursor: pointer; transition: 0.3s; }
+        .user-profile:hover { background: rgba(100, 255, 218, 0.2); }
         .user-profile img { width: 32px !important; height: 32px !important; border-radius: 50%; object-fit: cover; }
+        
+        .profile-dropdown { display: none; position: absolute; right: 0; top: 50px; width: 220px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 10005 !important; overflow: hidden; }
+        .profile-dropdown-header { padding: 15px; border-bottom: 1px solid var(--border-color); text-align: center; }
+        .profile-dropdown-header img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--accent); }
+        .profile-dropdown-header .name { font-weight: bold; color: var(--text-main); font-size: 16px; }
+        .profile-dropdown-header .role { color: var(--accent); font-size: 12px; margin-top: 5px; }
+        .profile-menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--text-main); text-decoration: none; transition: 0.2s; font-size: 14px; }
+        .profile-menu-item:hover { background: rgba(100, 255, 218, 0.1); color: var(--accent); }
+        .profile-menu-item i { width: 16px; text-align: center; }
 
         .content-scroll-area { flex: 1; overflow-y: auto; padding: 30px; width: 100%; box-sizing: border-box; }
         .content-body { max-width: 1200px; margin: 0 auto; width: 100%; }
@@ -41,11 +54,6 @@
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
         th, td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
         .status { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        
-        .notif-wrapper { position: relative; display: inline-block; }
-        .notif-bell { font-size: 22px; color: var(--text-muted); cursor: pointer; position: relative; transition: 0.3s; }
-        .notif-bell:hover { color: var(--accent); }
-        .notif-badge { position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; font-weight: bold; animation: pulse 1.5s infinite; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .modal-content { background: var(--card-bg); padding: 30px; border-radius: 10px; border: 1px solid var(--accent); width: 100%; max-width: 350px; position: relative; }
@@ -93,17 +101,14 @@
             </div>
             <div>
                 <div style="font-weight: bold; color: var(--text-main); font-size: 16px;"><%= (typeof user !== 'undefined' && user) ? user.username : 'Mehmon' %></div>
-                <div style="font-size: 12px; color: var(--accent);">Administrator</div>
+                <div style="font-size: 12px; color: var(--accent);"><%= (typeof user !== 'undefined' && user && user.role === 'admin') ? 'Administrator' : 'Foydalanuvchi' %></div>
             </div>
         </div>
 
         <div class="nav-menu">
             <a href="/dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> <span data-i18n="nav_dashboard">Bosh panel</span></a>
             <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span>Statistika</span></a>
-            
-            <!-- YANGI MENYU QO'SHILDI -->
             <a href="/notifications" class="nav-item"><i class="fas fa-bell"></i> <span>Bildirishnomalar</span></a>
-            
             <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a><% } %>
             <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span data-i18n="nav_settings">Profil Sozlamalari</span></a>
             <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> <span data-i18n="nav_sessions">Faol Qurilmalar</span></a>
@@ -117,11 +122,10 @@
             <div style="font-weight: 600;"><i class="fas fa-lock" style="color:#8b5cf6;"></i> <span data-i18n="platform_title">LoginGuard Platformasi</span></div>
             <div class="header-controls">
                 
-                <!-- Qo'ng'iroqcha endi to'g'ridan to'g'ri yangi sahifaga olib o'tadi (Kichik oyna olib tashlandi) -->
-                <a href="/notifications" class="notif-wrapper" style="text-decoration:none;">
-                    <div class="notif-bell">
+                <a href="/notifications" style="text-decoration:none;">
+                    <div style="position: relative; color: var(--text-muted); cursor: pointer; transition: 0.3s; font-size: 22px;">
                         <i class="fas fa-bell" style="<%= typeof notifications !== 'undefined' && notifications && notifications.length > 0 ? 'color: var(--danger);' : '' %>"></i>
-                        <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %><span class="notif-badge"><%= notifications.length %></span><% } %>
+                        <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %><span style="position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; font-weight: bold; animation: pulse 1.5s infinite;"><%= notifications.length %></span><% } %>
                     </div>
                 </a>
 
@@ -129,11 +133,30 @@
                 <select id="languageSelect" onchange="changeLanguage(this.value)" style="background:var(--card-bg); color:var(--text-main); border:none; outline:none; padding: 5px;">
                     <option value="uz">UZB</option><option value="en">ENG</option><option value="ru">RUS</option>
                 </select>
-                <div class="user-profile">
-                    <% if (typeof user !== 'undefined' && user && user.avatar) { %><img src="<%= user.avatar %>"><% } else { %><i class="fas fa-user-circle"></i><% } %>
-                    <%= typeof user !== 'undefined' && user ? user.username : 'Mehmon' %>
+                
+                <!-- YANGILANGAN PROFIL QISMI (Bosilganda menyu ochiladi) -->
+                <div class="profile-wrapper">
+                    <div class="user-profile" onclick="toggleProfileMenu()">
+                        <% if (typeof user !== 'undefined' && user && user.avatar) { %><img src="<%= user.avatar %>"><% } else { %><i class="fas fa-user-circle"></i><% } %>
+                        <span><%= typeof user !== 'undefined' && user ? user.username : 'Mehmon' %></span>
+                        <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 5px;"></i>
+                    </div>
+                    
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-dropdown-header">
+                            <% if (typeof user !== 'undefined' && user && user.avatar) { %><img src="<%= user.avatar %>"><% } else { %><div style="width: 60px; height: 60px; border-radius: 50%; background: #2c3e50; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;"><i class="fas fa-user-shield" style="color: var(--accent); font-size: 28px;"></i></div><% } %>
+                            <div class="name"><%= typeof user !== 'undefined' && user ? user.username : 'Mehmon' %></div>
+                            <div class="role"><%= (typeof user !== 'undefined' && user && user.role === 'admin') ? 'Tizim Administratori' : 'Foydalanuvchi' %></div>
+                        </div>
+                        <div style="padding: 10px 0;">
+                            <a href="/settings" class="profile-menu-item"><i class="fas fa-user-edit"></i> Profilni tahrirlash</a>
+                            <a href="/sessions" class="profile-menu-item"><i class="fas fa-desktop"></i> Faol qurilmalar</a>
+                            <div style="border-top: 1px solid var(--border-color); margin: 5px 0;"></div>
+                            <a href="/logout" class="profile-menu-item" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Tizimdan chiqish</a>
+                        </div>
+                    </div>
                 </div>
-                <a href="/logout" class="btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 8px 12px;"><i class="fas fa-sign-out-alt"></i></a>
+
             </div>
         </div>
         
@@ -212,13 +235,10 @@
                     <% } else { %> <div style="padding: 30px; text-align: center;" data-i18n="no_logs">Ma'lumot topilmadi.</div> <% } %>
                 </div>
 
-                <!-- Bosh paneldagi eskicha xavf ro'yxati olib tashlandi. U faqat yangi sahifada ko'rinadi -->
-
             </div>
         </div>
     </div>
     
-    <!-- Aloqa Modali -->
     <div class="modal-overlay" id="contactModal">
         <div class="modal-content">
             <i class="fas fa-times" style="position:absolute; top:15px; right:15px; cursor:pointer;" onclick="document.getElementById('contactModal').style.display='none'"></i>
@@ -248,6 +268,21 @@
     <script src="/socket.io/socket.io.js"></script>
     
     <script>
+        // Profil menyusini ochish/yopish funksiyasi
+        function toggleProfileMenu() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Boshqa joy bosilganda profil menyusini yopish
+        document.addEventListener('click', function(event) {
+            const wrapper = document.querySelector('.profile-wrapper');
+            const dropdown = document.getElementById('profileDropdown');
+            if (wrapper && dropdown && !wrapper.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
         const translations = { 
             en: { title: "Dashboard", portal_name: "CYBER PORTAL", nav_dashboard: "Dashboard", nav_settings: "Settings", nav_sessions: "Devices", nav_contact: "Contact", platform_title: "LoginGuard", total_attempts: "Attempts", total_users: "Users", blocked_ips: "Blocked IPs", recent_logs: "Recent Logs", timestamp: "Time", ip_address: "IP", location: "Location", status: "Status", action: "Action", status_success: "Success", status_blocked: "Blocked", btn_block: "Block", btn_unblock: "Unblock", no_logs: "No logs.", failed_attempts_title: "Failed Attempts", no_failed_logs: "Safe!" }, 
             uz: { title: "Bosh panel", portal_name: "KIBER PORTAL", nav_dashboard: "Bosh panel", nav_settings: "Sozlamalar", nav_sessions: "Qurilmalar", nav_contact: "Bog'lanish", platform_title: "LoginGuard", total_attempts: "Urinishlar", total_users: "Foydalanuvchilar", blocked_ips: "Bloklangan IPlar", recent_logs: "Kirishlar", timestamp: "Vaqt", ip_address: "IP", location: "Joylashuv", status: "Holat", action: "Harakat", status_success: "Muvaffaqiyatli", status_blocked: "Bloklangan", btn_block: "Bloklash", btn_unblock: "Ochish", no_logs: "Ma'lumot yo'q.", failed_attempts_title: "Shubhali kirishlar", no_failed_logs: "Hisobingiz xavfsiz!" }, 
