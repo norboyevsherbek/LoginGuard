@@ -21,7 +21,7 @@
         .nav-item i { width: 20px; text-align: center; }
         
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
-        .header { height: 85px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; font-size: 16px; flex-shrink: 0; }
+        .header { position: relative; z-index: 1005; height: 85px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; font-size: 16px; flex-shrink: 0; }
         .header-controls { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; }
         .header-controls i { font-size: 22px !important; cursor: pointer; }
         .btn { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; font-size: 16px; display: inline-block;}
@@ -46,14 +46,6 @@
         .notif-bell { font-size: 22px; color: var(--text-muted); cursor: pointer; position: relative; transition: 0.3s; }
         .notif-bell:hover { color: var(--accent); }
         .notif-badge { position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; font-weight: bold; animation: pulse 1.5s infinite; }
-        .notif-dropdown { display: none; position: absolute; right: 0; top: 40px; width: 320px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 1000; overflow: hidden; max-width: 90vw; }
-        .notif-dropdown-header { padding: 12px 15px; background: rgba(239, 68, 68, 0.1); border-bottom: 1px solid var(--border-color); font-weight: bold; color: var(--danger); display: flex; justify-content: space-between; align-items: center; }
-        .notif-list { max-height: 300px; overflow-y: auto; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid var(--border-color); font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
-        .notif-item-title { font-weight: bold; color: var(--text-main); margin-bottom: 3px; }
-        .notif-item-desc { color: var(--text-muted); font-size: 12px; line-height: 1.3; }
-        .notif-item-time { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .modal-content { background: var(--card-bg); padding: 30px; border-radius: 10px; border: 1px solid var(--accent); width: 100%; max-width: 350px; position: relative; }
@@ -73,9 +65,10 @@
             body { flex-direction: column; }
             .header-controls { display: none !important; }
             .header { padding: 15px; height: 70px; }
-            #mobile-menu-btn { display: inline-flex !important; align-items: center; position: fixed !important; top: 15px; right: 20px; font-size: 26px; background: transparent; border: none; color: white; z-index: 10001 !important; cursor: pointer; }
+            #mobile-menu-btn { display: inline-flex !important; align-items: center; position: fixed !important; top: 15px; right: 20px; font-size: 26px; background: transparent; border: none; color: white; z-index: 10001 !important; cursor: pointer; transition: 0.2s; }
             .sidebar { position: fixed !important; right: -100% !important; left: auto !important; top: 0 !important; width: 280px !important; height: 100vh !important; background-color: var(--bg-sidebar) !important; transition: all 0.3s ease !important; z-index: 10000 !important; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border-right: none; }
             .sidebar.active { right: 0 !important; }
+            .sidebar-header { padding-right: 60px !important; } 
             .nav-menu { display: flex !important; flex-direction: column !important; width: 100% !important; margin-top: 0 !important; }
             .nav-item { display: flex !important; align-items: center !important; padding: 15px 20px !important; width: 100% !important; box-sizing: border-box !important; border-left: 3px solid transparent !important; border-bottom: none !important; }
             .nav-item.active, .nav-item:hover { border-left-color: var(--accent) !important; }
@@ -87,7 +80,7 @@
 <body>
     <div id="particles-js"></div>
 
-    <button id="mobile-menu-btn">&#9776; <span style="font-size: 14px; font-weight: bold; margin-left: 6px;"></span></button>
+    <button id="mobile-menu-btn">&#9776;</button>
 
     <div class="sidebar">
         <div class="sidebar-header" style="padding: 20px; border-bottom: 1px solid var(--border-color);">
@@ -99,7 +92,7 @@
                 <% if (typeof user !== 'undefined' && user && user.avatar) { %> <img src="<%= user.avatar %>" style="width:100%; height:100%; border-radius:50%; object-fit:cover;"> <% } else { %> <i class="fas fa-user-shield" style="color: var(--accent); font-size: 22px;"></i> <% } %>
             </div>
             <div>
-                <div style="font-weight: bold; color: var(--text-main); font-size: 16px;"><%= (typeof user !== 'undefined' && user) ? user.username : 'Admin' %></div>
+                <div style="font-weight: bold; color: var(--text-main); font-size: 16px;"><%= (typeof user !== 'undefined' && user) ? user.username : 'Mehmon' %></div>
                 <div style="font-size: 12px; color: var(--accent);">Administrator</div>
             </div>
         </div>
@@ -107,6 +100,10 @@
         <div class="nav-menu">
             <a href="/dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> <span data-i18n="nav_dashboard">Bosh panel</span></a>
             <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span>Statistika</span></a>
+            
+            <!-- YANGI MENYU QO'SHILDI -->
+            <a href="/notifications" class="nav-item"><i class="fas fa-bell"></i> <span>Bildirishnomalar</span></a>
+            
             <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a><% } %>
             <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span data-i18n="nav_settings">Profil Sozlamalari</span></a>
             <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> <span data-i18n="nav_sessions">Faol Qurilmalar</span></a>
@@ -119,22 +116,15 @@
         <div class="header">
             <div style="font-weight: 600;"><i class="fas fa-lock" style="color:#8b5cf6;"></i> <span data-i18n="platform_title">LoginGuard Platformasi</span></div>
             <div class="header-controls">
-                <div class="notif-wrapper">
-                    <div class="notif-bell" onclick="toggleNotifications()">
-                        <i class="fas fa-bell" id="bellIcon" style="<%= typeof notifications !== 'undefined' && notifications && notifications.length > 0 ? 'color: var(--danger);' : '' %>"></i>
-                        <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %><span class="notif-badge" id="notifBadge"><%= notifications.length %></span><% } %>
+                
+                <!-- Qo'ng'iroqcha endi to'g'ridan to'g'ri yangi sahifaga olib o'tadi (Kichik oyna olib tashlandi) -->
+                <a href="/notifications" class="notif-wrapper" style="text-decoration:none;">
+                    <div class="notif-bell">
+                        <i class="fas fa-bell" style="<%= typeof notifications !== 'undefined' && notifications && notifications.length > 0 ? 'color: var(--danger);' : '' %>"></i>
+                        <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %><span class="notif-badge"><%= notifications.length %></span><% } %>
                     </div>
-                    <div class="notif-dropdown" id="notifDropdown">
-                        <div class="notif-dropdown-header"><span><i class="fas fa-exclamation-triangle"></i> Xavfsizlik Ogohlantirishlari</span><span style="font-size:11px; cursor:pointer; color:var(--text-muted);" onclick="toggleNotifications()">X</span></div>
-                        <div class="notif-list">
-                            <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %>
-                                <% notifications.forEach(n => { %>
-                                    <div class="notif-item"><i class="fas fa-shield-cat" style="color: var(--danger); margin-top:2px;"></i><div><div class="notif-item-title"><%= n.title %></div><div class="notif-item-desc"><%= n.msg %></div><div class="notif-item-time"><i class="fas fa-clock"></i> <%= n.time ? new Date(n.time + 'Z').toLocaleString('uz-UZ') : '' %></div></div></div>
-                                <% }) %>
-                            <% } else { %> <div style="padding: 15px; text-align: center; color: var(--success); font-size: 13px;"><i class="fas fa-check-circle"></i> Yangi xavflar aniqlanmadi!</div> <% } %>
-                        </div>
-                    </div>
-                </div>
+                </a>
+
                 <i class="fas fa-moon" id="themeIcon" style="cursor: pointer;" onclick="toggleTheme()"></i>
                 <select id="languageSelect" onchange="changeLanguage(this.value)" style="background:var(--card-bg); color:var(--text-main); border:none; outline:none; padding: 5px;">
                     <option value="uz">UZB</option><option value="en">ENG</option><option value="ru">RUS</option>
@@ -150,7 +140,6 @@
         <div class="content-scroll-area">
             <div class="content-body">
                 
-                <!-- YANGI QO'SHILGAN FILTR QISMI -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0; color: var(--text-main); font-size: 20px;">Statistik Xulosalar</h2>
                     <select onchange="window.location.href='/dashboard?filter=' + this.value" style="padding: 8px 15px; border-radius: 6px; background: var(--bg-header); color: var(--accent); border: 1px solid var(--accent); font-weight: bold; outline: none; cursor: pointer;">
@@ -172,14 +161,14 @@
                             </div>
                             <div style="margin-left: auto; color: var(--accent);"><i class="fas fa-arrow-right"></i></div>
                         </a>
-                       <a href="/admin/blocked-ips" class="stat-card" style="border-color: var(--danger); text-decoration:none; color:inherit; cursor:pointer; transition:0.3s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-    <div style="font-size:30px; color:var(--danger);"><i class="fas fa-ban"></i></div>
-    <div>
-        <h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="blocked_ips">Bloklangan IP lar</h3>
-        <div class="value" style="color:var(--danger);"><%= typeof blockedIpsCount !== 'undefined' ? blockedIpsCount : 0 %></div>
-    </div>
-    <div style="margin-left: auto; color: var(--danger);"><i class="fas fa-arrow-right"></i></div>
-</a>
+                        <a href="/admin/blocked-ips" class="stat-card" style="border-color: var(--danger); text-decoration:none; color:inherit; cursor:pointer; transition:0.3s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                            <div style="font-size:30px; color:var(--danger);"><i class="fas fa-ban"></i></div>
+                            <div>
+                                <h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="blocked_ips">Bloklangan IP lar</h3>
+                                <div class="value" style="color:var(--danger);"><%= typeof blockedIpsCount !== 'undefined' ? blockedIpsCount : 0 %></div>
+                            </div>
+                            <div style="margin-left: auto; color: var(--danger);"><i class="fas fa-arrow-right"></i></div>
+                        </a>
                     <% } %>
                 </div>
                 
@@ -223,37 +212,13 @@
                     <% } else { %> <div style="padding: 30px; text-align: center;" data-i18n="no_logs">Ma'lumot topilmadi.</div> <% } %>
                 </div>
 
-                <div class="logs-section" style="border-color: rgba(239, 68, 68, 0.3);">
-                    <div class="logs-header" style="background: rgba(239, 68, 68, 0.05);"><h3 style="margin:0;"><i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> <span data-i18n="failed_attempts_title">Shubhali kirishlar</span></h3></div>
-                    <% if (typeof failedLogs !== 'undefined' && failedLogs && failedLogs.length > 0) { %>
-                        <div class="table-responsive">
-                            <table>
-                                <thead><tr>
-                                    <th data-i18n="timestamp">Vaqt</th>
-                                    <th data-i18n="ip_address">IP Manzil</th>
-                                    <th data-i18n="location">Joylashuv</th>
-                                    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><th>Login</th><% } %>
-                                    <th data-i18n="status">Holat</th>
-                                </tr></thead>
-                                <tbody>
-                                    <% failedLogs.forEach(fLog => { %>
-                                        <tr>
-                                            <td><%= fLog.attempt_time ? new Date(fLog.attempt_time + 'Z').toLocaleString('uz-UZ') : 'Noma\'lum' %></td>
-                                            <td style="color: var(--danger); font-family: monospace; font-weight: bold;"><%= fLog.ip_address %></td>
-                                            <td><%= fLog.location || "🌍 Noma'lum" %></td>
-                                            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><td><%= fLog.username %></td><% } %>
-                                            <td><span class="status" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">Xato parol</span></td>
-                                        </tr>
-                                    <% }) %>
-                                </tbody>
-                            </table>
-                        </div>
-                    <% } else { %> <div style="padding: 20px; text-align: center; color: var(--success);"><i class="fas fa-shield-alt"></i> <span data-i18n="no_failed_logs">Hisobingiz xavfsiz!</span></div> <% } %>
-                </div>
+                <!-- Bosh paneldagi eskicha xavf ro'yxati olib tashlandi. U faqat yangi sahifada ko'rinadi -->
+
             </div>
         </div>
     </div>
     
+    <!-- Aloqa Modali -->
     <div class="modal-overlay" id="contactModal">
         <div class="modal-content">
             <i class="fas fa-times" style="position:absolute; top:15px; right:15px; cursor:pointer;" onclick="document.getElementById('contactModal').style.display='none'"></i>
@@ -283,28 +248,6 @@
     <script src="/socket.io/socket.io.js"></script>
     
     <script>
-        function toggleNotifications() {
-            const dropdown = document.getElementById('notifDropdown');
-            if (dropdown) { const isVisible = dropdown.style.display === 'block'; dropdown.style.display = isVisible ? 'none' : 'block'; if (!isVisible) hideBadgePermanently(); }
-        }
-        function hideBadgePermanently() {
-            const badge = document.getElementById('notifBadge'); const bellIcon = document.getElementById('bellIcon');
-            if (badge) badge.style.display = 'none'; if (bellIcon) bellIcon.style.color = 'var(--text-muted)';
-            localStorage.setItem('read_notifications_count', <%= typeof notifications !== 'undefined' && notifications ? notifications.length : 0 %>);
-        }
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentNotifCount = <%= typeof notifications !== 'undefined' && notifications ? notifications.length : 0 %>;
-            const readCount = parseInt(localStorage.getItem('read_notifications_count') || '0', 10);
-            if (currentNotifCount > 0 && currentNotifCount <= readCount) {
-                const badge = document.getElementById('notifBadge'); const bellIcon = document.getElementById('bellIcon');
-                if (badge) badge.style.display = 'none'; if (bellIcon) bellIcon.style.color = 'var(--text-muted)';
-            }
-        });
-        document.addEventListener('click', function(event) {
-            const wrapper = document.querySelector('.notif-wrapper'); const dropdown = document.getElementById('notifDropdown');
-            if (wrapper && dropdown && !wrapper.contains(event.target)) dropdown.style.display = 'none';
-        });
-
         const translations = { 
             en: { title: "Dashboard", portal_name: "CYBER PORTAL", nav_dashboard: "Dashboard", nav_settings: "Settings", nav_sessions: "Devices", nav_contact: "Contact", platform_title: "LoginGuard", total_attempts: "Attempts", total_users: "Users", blocked_ips: "Blocked IPs", recent_logs: "Recent Logs", timestamp: "Time", ip_address: "IP", location: "Location", status: "Status", action: "Action", status_success: "Success", status_blocked: "Blocked", btn_block: "Block", btn_unblock: "Unblock", no_logs: "No logs.", failed_attempts_title: "Failed Attempts", no_failed_logs: "Safe!" }, 
             uz: { title: "Bosh panel", portal_name: "KIBER PORTAL", nav_dashboard: "Bosh panel", nav_settings: "Sozlamalar", nav_sessions: "Qurilmalar", nav_contact: "Bog'lanish", platform_title: "LoginGuard", total_attempts: "Urinishlar", total_users: "Foydalanuvchilar", blocked_ips: "Bloklangan IPlar", recent_logs: "Kirishlar", timestamp: "Vaqt", ip_address: "IP", location: "Joylashuv", status: "Holat", action: "Harakat", status_success: "Muvaffaqiyatli", status_blocked: "Bloklangan", btn_block: "Bloklash", btn_unblock: "Ochish", no_logs: "Ma'lumot yo'q.", failed_attempts_title: "Shubhali kirishlar", no_failed_logs: "Hisobingiz xavfsiz!" }, 
@@ -339,8 +282,21 @@
         const menuBtn = document.getElementById('mobile-menu-btn');
         const sidebar = document.querySelector('.sidebar');
         if(menuBtn && sidebar) {
-            menuBtn.addEventListener('click', function(e) { e.stopPropagation(); sidebar.classList.toggle('active'); });
-            document.addEventListener('click', function(e) { if(sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== menuBtn) sidebar.classList.remove('active'); });
+            menuBtn.addEventListener('click', function(e) { 
+                e.stopPropagation(); 
+                sidebar.classList.toggle('active'); 
+                if(sidebar.classList.contains('active')) {
+                    menuBtn.innerHTML = '<i class="fas fa-times"></i>';
+                } else {
+                    menuBtn.innerHTML = '&#9776;';
+                }
+            });
+            document.addEventListener('click', function(e) { 
+                if(sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== menuBtn) {
+                    sidebar.classList.remove('active');
+                    menuBtn.innerHTML = '&#9776;';
+                } 
+            });
         }
     </script>
 </body>
