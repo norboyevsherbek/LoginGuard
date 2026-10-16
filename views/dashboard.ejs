@@ -101,19 +101,19 @@
             </div>
             <div>
                 <div style="font-weight: bold; color: var(--text-main); font-size: 16px;"><%= (typeof user !== 'undefined' && user) ? user.username : 'Mehmon' %></div>
-                <div style="font-size: 12px; color: var(--accent);"><%= (typeof user !== 'undefined' && user && user.role === 'admin') ? 'Administrator' : 'Foydalanuvchi' %></div>
+                <div style="font-size: 12px; color: var(--accent);" data-i18n="<%= (typeof user !== 'undefined' && user && user.role === 'admin') ? 'role_admin' : 'role_user' %>"><%= (typeof user !== 'undefined' && user && user.role === 'admin') ? 'Administrator' : 'Foydalanuvchi' %></div>
             </div>
         </div>
 
         <div class="nav-menu">
             <a href="/dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> <span data-i18n="nav_dashboard">Bosh panel</span></a>
-            <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span>Statistika</span></a>
-            <a href="/notifications" class="nav-item"><i class="fas fa-bell"></i> <span>Bildirishnomalar</span></a>
-            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span>Foydalanuvchi qo'shish</span></a><% } %>
+            <a href="/analytics" class="nav-item"><i class="fas fa-chart-area"></i> <span data-i18n="nav_analytics">Statistika</span></a>
+            <a href="/notifications" class="nav-item"><i class="fas fa-bell"></i> <span data-i18n="nav_notifications">Bildirishnomalar</span></a>
+            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><a href="/admin/add-user" class="nav-item"><i class="fas fa-user-plus"></i> <span data-i18n="nav_add_user">Foydalanuvchi qo'shish</span></a><% } %>
             <a href="/settings" class="nav-item"><i class="fas fa-user-cog"></i> <span data-i18n="nav_settings">Profil Sozlamalari</span></a>
             <a href="/sessions" class="nav-item"><i class="fas fa-laptop-house"></i> <span data-i18n="nav_sessions">Faol Qurilmalar</span></a>
             <a href="#" class="nav-item" onclick="document.getElementById('contactModal').style.display='flex'"><i class="fas fa-address-book"></i> <span data-i18n="nav_contact">Bog'lanish</span></a>
-            <a href="/logout" class="nav-item mobile-only-profile" style="color: var(--danger); border-top: 1px solid var(--border-color); margin-top: 10px;"><i class="fas fa-sign-out-alt"></i> <span>Chiqish</span></a>
+            <a href="/logout" class="nav-item mobile-only-profile" style="color: var(--danger); border-top: 1px solid var(--border-color); margin-top: 10px;"><i class="fas fa-sign-out-alt"></i> <span data-i18n="nav_logout">Chiqish</span></a>
         </div>
     </div>
     
@@ -146,13 +146,13 @@
                         <div class="profile-dropdown-header">
                             <% if (typeof user !== 'undefined' && user && user.avatar) { %><img src="<%= user.avatar %>"><% } else { %><div style="width: 60px; height: 60px; border-radius: 50%; background: #2c3e50; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;"><i class="fas fa-user-shield" style="color: var(--accent); font-size: 28px;"></i></div><% } %>
                             <div class="name"><%= typeof user !== 'undefined' && user ? user.username : 'Mehmon' %></div>
-                            <div class="role"><%= (typeof user !== 'undefined' && user && user.role === 'admin') ? 'Tizim Administratori' : 'Foydalanuvchi' %></div>
+                            <div class="role" data-i18n="<%= (typeof user !== 'undefined' && user && user.role === 'admin') ? 'role_sys_admin' : 'role_user' %>"><%= (typeof user !== 'undefined' && user && user.role === 'admin') ? 'Tizim Administratori' : 'Foydalanuvchi' %></div>
                         </div>
                         <div style="padding: 10px 0;">
-                            <a href="/settings" class="profile-menu-item"><i class="fas fa-user-edit"></i> Profilni tahrirlash</a>
-                            <a href="/sessions" class="profile-menu-item"><i class="fas fa-desktop"></i> Faol qurilmalar</a>
+                            <a href="/settings" class="profile-menu-item"><i class="fas fa-user-edit"></i> <span data-i18n="profile_edit">Profilni tahrirlash</span></a>
+                            <a href="/sessions" class="profile-menu-item"><i class="fas fa-desktop"></i> <span data-i18n="nav_sessions">Faol qurilmalar</span></a>
                             <div style="border-top: 1px solid var(--border-color); margin: 5px 0;"></div>
-                            <a href="/logout" class="profile-menu-item" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Tizimdan chiqish</a>
+                            <a href="/logout" class="profile-menu-item" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> <span data-i18n="profile_logout">Tizimdan chiqish</span></a>
                         </div>
                     </div>
                 </div>
@@ -164,12 +164,12 @@
             <div class="content-body">
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                    <h2 style="margin: 0; color: var(--text-main); font-size: 20px;">Statistik Xulosalar</h2>
+                    <h2 style="margin: 0; color: var(--text-main); font-size: 20px;" data-i18n="stat_summary">Statistik Xulosalar</h2>
                     <select onchange="window.location.href='/dashboard?filter=' + this.value" style="padding: 8px 15px; border-radius: 6px; background: var(--bg-header); color: var(--accent); border: 1px solid var(--accent); font-weight: bold; outline: none; cursor: pointer;">
-                        <option value="all" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'all') ? 'selected' : '' %>>Barcha vaqt</option>
-                        <option value="today" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'today') ? 'selected' : '' %>>Bugun (24 soat)</option>
-                        <option value="week" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'week') ? 'selected' : '' %>>Oxirgi 1 hafta</option>
-                        <option value="month" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'month') ? 'selected' : '' %>>Oxirgi 1 oy</option>
+                        <option value="all" data-i18n="filter_all" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'all') ? 'selected' : '' %>>Barcha vaqt</option>
+                        <option value="today" data-i18n="filter_today" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'today') ? 'selected' : '' %>>Bugun (24 soat)</option>
+                        <option value="week" data-i18n="filter_week" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'week') ? 'selected' : '' %>>Oxirgi 1 hafta</option>
+                        <option value="month" data-i18n="filter_month" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'month') ? 'selected' : '' %>>Oxirgi 1 oy</option>
                     </select>
                 </div>
                 
@@ -179,7 +179,7 @@
                         <a href="/admin/users" class="stat-card" style="text-decoration:none; color:inherit; cursor:pointer; transition:0.3s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
                             <div style="font-size:30px; color:var(--accent);"><i class="fas fa-users-cog"></i></div>
                             <div>
-                                <h3 style="margin:0; font-size:14px; color:var(--text-muted);">Barcha Foydalanuvchilar</h3>
+                                <h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="total_users">Barcha Foydalanuvchilar</h3>
                                 <div class="value"><%= typeof totalUsers !== 'undefined' ? totalUsers : 0 %></div>
                             </div>
                             <div style="margin-left: auto; color: var(--accent);"><i class="fas fa-arrow-right"></i></div>
@@ -198,14 +198,14 @@
                 <div class="logs-section">
                     <div class="logs-header">
                         <h3 style="margin:0;"><i class="fas fa-list-ul" style="color: var(--accent);"></i> <span data-i18n="recent_logs">So'nggi Kirishlar Tarixi</span></h3>
-                        <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><a href="/admin/export-logs" class="btn" style="background: rgba(100, 255, 218, 0.1); color: var(--accent); font-size: 14px;"><i class="fas fa-file-excel"></i> Yuklab olish</a><% } %>
+                        <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><a href="/admin/export-logs" class="btn" style="background: rgba(100, 255, 218, 0.1); color: var(--accent); font-size: 14px;"><i class="fas fa-file-excel"></i> <span data-i18n="btn_download">Yuklab olish</span></a><% } %>
                     </div>
                     <% if (typeof logs !== 'undefined' && logs && logs.length > 0) { %>
                         <div class="table-responsive">
                             <table>
                                 <thead><tr>
                                     <th data-i18n="timestamp">Vaqt</th>
-                                    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><th>Foydalanuvchi</th><% } %>
+                                    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><th data-i18n="th_user">Foydalanuvchi</th><% } %>
                                     <th data-i18n="ip_address">IP Manzil</th>
                                     <th data-i18n="location">Joylashuv</th>
                                     <th data-i18n="status">Holat</th>
@@ -214,12 +214,15 @@
                                 <tbody>
                                     <% logs.forEach(log => { %>
                                         <tr>
-                                            <td><%= log.login_time ? new Date(log.login_time + 'Z').toLocaleString('uz-UZ') : 'Noma\'lum' %></td>
+                                            <td><%= log.login_time ? new Date(log.login_time + 'Z').toLocaleString('uz-UZ') : "Noma'lum" %></td>
                                             <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-                                                <td style="font-weight: bold; color: var(--text-main);"><%= log.username || 'Noma\'lum' %></td>
+                                                <td style="font-weight: bold; color: var(--text-main);"><%= log.username || "Noma'lum" %></td>
                                             <% } %>
                                             <td style="color: var(--accent); font-family: monospace;"><%= log.ip_address %></td>
-                                            <td><%= log.location || "🌍 Noma'lum" %></td>
+                                            
+                                            <!-- Joylashuvni tilga qarab avtomatik o'zgaradigan qism -->
+                                            <td class="location-cell" data-raw-loc="<%= log.location || "🌍 Noma'lum" %>"><%= log.location || "🌍 Noma'lum" %></td>
+                                            
                                             <td><% if (log.is_blocked) { %> <span class="status" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);" data-i18n="status_blocked">Bloklangan</span> <% } else { %> <span class="status" style="background: rgba(16, 185, 129, 0.1); color: var(--success);" data-i18n="status_success">Muvaffaqiyatli</span> <% } %></td>
                                             <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
                                                 <td>
@@ -242,7 +245,7 @@
     <div class="modal-overlay" id="contactModal">
         <div class="modal-content">
             <i class="fas fa-times" style="position:absolute; top:15px; right:15px; cursor:pointer;" onclick="document.getElementById('contactModal').style.display='none'"></i>
-            <h2 data-i18n="nav_contact" style="color: var(--accent); margin-top: 0;">Admin bilan bog'lanish</h2>
+            <h2 data-i18n="modal_contact_title" style="color: var(--accent); margin-top: 0;">Admin bilan bog'lanish</h2>
             <div style="margin-top:20px; display:flex; flex-direction:column; gap:15px;">
                 <a href="tel:+998910243606" style="color:var(--text-main); text-decoration:none;"><i class="fas fa-phone" style="color:#10b981; margin-right:10px;"></i> +998 (91) 024 36 06</a>
                 <a href="https://t.me/n727l" target="_blank" style="color:var(--text-main); text-decoration:none;"><i class="fab fa-telegram" style="color:#3b82f6; margin-right:10px;"></i> @n727l</a>
@@ -254,7 +257,7 @@
     
     <div class="chat-widget">
         <div class="chat-window" id="chatWindow">
-            <div class="chat-header"><span>Jonli Yordam</span><i class="fas fa-times" style="cursor:pointer;" onclick="document.getElementById('chatWindow').style.display='none'"></i></div>
+            <div class="chat-header"><span data-i18n="chat_title">Jonli Yordam</span><i class="fas fa-times" style="cursor:pointer;" onclick="document.getElementById('chatWindow').style.display='none'"></i></div>
             <div class="chat-messages" id="chatMessages"></div>
             <div style="display:flex; padding:10px; border-top:1px solid rgba(100,255,218,0.2); background:var(--bg-header);">
                 <input type="text" id="chatInput" placeholder="Xabar..." style="flex:1; padding:10px; border:none; border-radius: 5px; outline:none; background:var(--card-bg); color:var(--text-main);" onkeypress="if(event.key==='Enter') sendMessage()">
@@ -284,16 +287,173 @@
         });
 
         const translations = { 
-            en: { title: "Dashboard", portal_name: "CYBER PORTAL", nav_dashboard: "Dashboard", nav_settings: "Settings", nav_sessions: "Devices", nav_contact: "Contact", platform_title: "LoginGuard", total_attempts: "Attempts", total_users: "Users", blocked_ips: "Blocked IPs", recent_logs: "Recent Logs", timestamp: "Time", ip_address: "IP", location: "Location", status: "Status", action: "Action", status_success: "Success", status_blocked: "Blocked", btn_block: "Block", btn_unblock: "Unblock", no_logs: "No logs.", failed_attempts_title: "Failed Attempts", no_failed_logs: "Safe!" }, 
-            uz: { title: "Bosh panel", portal_name: "KIBER PORTAL", nav_dashboard: "Bosh panel", nav_settings: "Sozlamalar", nav_sessions: "Qurilmalar", nav_contact: "Bog'lanish", platform_title: "LoginGuard", total_attempts: "Urinishlar", total_users: "Foydalanuvchilar", blocked_ips: "Bloklangan IPlar", recent_logs: "Kirishlar", timestamp: "Vaqt", ip_address: "IP", location: "Joylashuv", status: "Holat", action: "Harakat", status_success: "Muvaffaqiyatli", status_blocked: "Bloklangan", btn_block: "Bloklash", btn_unblock: "Ochish", no_logs: "Ma'lumot yo'q.", failed_attempts_title: "Shubhali kirishlar", no_failed_logs: "Hisobingiz xavfsiz!" }, 
-            ru: { title: "Панель", portal_name: "КИБЕР ПОРТАЛ", nav_dashboard: "Панель", nav_settings: "Настройки", nav_sessions: "Устройства", nav_contact: "Связаться", platform_title: "LoginGuard", total_attempts: "Входов", total_users: "Пользователи", blocked_ips: "Заблокировано", recent_logs: "История", timestamp: "Время", ip_address: "IP", location: "Локация", status: "Статус", action: "Действие", status_success: "Успешно", status_blocked: "Блок", btn_block: "Блок", btn_unblock: "Разблок", no_logs: "Пусто.", failed_attempts_title: "Неудачные попытки", no_failed_logs: "В безопасности!" } 
+            en: { 
+                title: "Dashboard - Cyber Security Portal", 
+                portal_name: "CYBER PORTAL", 
+                nav_dashboard: "Dashboard", 
+                nav_analytics: "Statistics", 
+                nav_notifications: "Notifications", 
+                nav_add_user: "Add User", 
+                nav_settings: "Settings", 
+                nav_sessions: "Devices", 
+                nav_contact: "Contact", 
+                nav_logout: "Logout",
+                platform_title: "LoginGuard", 
+                role_admin: "Administrator",
+                role_sys_admin: "System Administrator",
+                role_user: "User",
+                profile_edit: "Edit Profile",
+                profile_logout: "Log out",
+                stat_summary: "Statistical Summary",
+                filter_all: "All time",
+                filter_today: "Today (24h)",
+                filter_week: "Last 1 week",
+                filter_month: "Last 1 month",
+                total_attempts: "Attempts", 
+                total_users: "All Users", 
+                blocked_ips: "Blocked IPs", 
+                recent_logs: "Recent Logs", 
+                btn_download: "Download",
+                timestamp: "Time", 
+                th_user: "User",
+                ip_address: "IP", 
+                location: "Location", 
+                status: "Status", 
+                action: "Action", 
+                status_success: "Success", 
+                status_blocked: "Blocked", 
+                btn_block: "Block", 
+                btn_unblock: "Unblock", 
+                no_logs: "No logs.", 
+                modal_contact_title: "Contact Admin",
+                chat_title: "Live Support",
+                chat_placeholder: "Message...",
+                loc_unknown: "Unknown",
+                loc_local: "Local network"
+            }, 
+            uz: { 
+                title: "Bosh panel - Kiberxavfsizlik Portali", 
+                portal_name: "KIBER PORTAL", 
+                nav_dashboard: "Bosh panel", 
+                nav_analytics: "Statistika", 
+                nav_notifications: "Bildirishnomalar", 
+                nav_add_user: "Foydalanuvchi qo'shish", 
+                nav_settings: "Sozlamalar", 
+                nav_sessions: "Qurilmalar", 
+                nav_contact: "Bog'lanish", 
+                nav_logout: "Chiqish",
+                platform_title: "LoginGuard", 
+                role_admin: "Administrator",
+                role_sys_admin: "Tizim Administratori",
+                role_user: "Foydalanuvchi",
+                profile_edit: "Profilni tahrirlash",
+                profile_logout: "Tizimdan chiqish",
+                stat_summary: "Statistik Xulosalar",
+                filter_all: "Barcha vaqt",
+                filter_today: "Bugun (24 soat)",
+                filter_week: "Oxirgi 1 hafta",
+                filter_month: "Oxirgi 1 oy",
+                total_attempts: "Urinishlar", 
+                total_users: "Barcha Foydalanuvchilar", 
+                blocked_ips: "Bloklangan IPlar", 
+                recent_logs: "So'nggi Kirishlar Tarixi", 
+                btn_download: "Yuklab olish",
+                timestamp: "Vaqt", 
+                th_user: "Foydalanuvchi",
+                ip_address: "IP Manzil", 
+                location: "Joylashuv", 
+                status: "Holat", 
+                action: "Harakat", 
+                status_success: "Muvaffaqiyatli", 
+                status_blocked: "Bloklangan", 
+                btn_block: "Bloklash", 
+                btn_unblock: "Ochish", 
+                no_logs: "Ma'lumot topilmadi.", 
+                modal_contact_title: "Admin bilan bog'lanish",
+                chat_title: "Jonli Yordam",
+                chat_placeholder: "Xabar...",
+                loc_unknown: "Noma'lum",
+                loc_local: "Lokal tarmoq"
+            }, 
+            ru: { 
+                title: "Панель - Портал Кибербезопасности", 
+                portal_name: "КИБЕР ПОРТАЛ", 
+                nav_dashboard: "Панель", 
+                nav_analytics: "Статистика", 
+                nav_notifications: "Уведомления", 
+                nav_add_user: "Добавить пользователя", 
+                nav_settings: "Настройки", 
+                nav_sessions: "Устройства", 
+                nav_contact: "Связаться", 
+                nav_logout: "Выйти",
+                platform_title: "LoginGuard", 
+                role_admin: "Администратор",
+                role_sys_admin: "Системный Администратор",
+                role_user: "Пользователь",
+                profile_edit: "Редактировать профиль",
+                profile_logout: "Выйти из системы",
+                stat_summary: "Статистические выводы",
+                filter_all: "За всё время",
+                filter_today: "Сегодня (24 часа)",
+                filter_week: "За последнюю неделю",
+                filter_month: "За последний месяц",
+                total_attempts: "Входов", 
+                total_users: "Все пользователи", 
+                blocked_ips: "Заблокировано", 
+                recent_logs: "История", 
+                btn_download: "Скачать",
+                timestamp: "Время", 
+                th_user: "Пользователь",
+                ip_address: "IP", 
+                location: "Локация", 
+                status: "Статус", 
+                action: "Действие", 
+                status_success: "Успешно", 
+                status_blocked: "Блок", 
+                btn_block: "Блок", 
+                btn_unblock: "Разблок", 
+                no_logs: "Пусто.", 
+                modal_contact_title: "Связаться с админом",
+                chat_title: "Живая помощь",
+                chat_placeholder: "Сообщение...",
+                loc_unknown: "Неизвестно",
+                loc_local: "Локальная сеть"
+            } 
         };
+
         let currentLang = localStorage.getItem('lang') || 'uz'; 
+
         function changeLanguage(lang) { 
-            currentLang = lang; localStorage.setItem('lang', lang); 
-            document.querySelectorAll('[data-i18n]').forEach(el => { if (translations[lang] && translations[lang][el.getAttribute('data-i18n')]) { el.innerText = translations[lang][el.getAttribute('data-i18n')]; } }); 
+            currentLang = lang; 
+            localStorage.setItem('lang', lang); 
+            
+            // Barcha data-i18n atributli elementlarni tarjima qilish
+            document.querySelectorAll('[data-i18n]').forEach(el => { 
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) { 
+                    el.innerText = translations[lang][key]; 
+                } 
+            }); 
+
+            // Jadvaldagi "Noma'lum" va "Lokal tarmoq" yozuvlarini tarjima qilish
+            document.querySelectorAll('.location-cell').forEach(el => {
+                let raw = el.getAttribute('data-raw-loc') || '';
+                if (raw.includes("Noma'lum") || raw.includes("Unknown") || raw.includes("Неизвестно")) {
+                    el.innerText = "🌍 " + translations[lang].loc_unknown;
+                } else if (raw.includes("Lokal tarmoq") || raw.includes("Local network") || raw.includes("Локальная сеть")) {
+                    el.innerText = "💻 " + translations[lang].loc_local;
+                }
+            });
+
+            // Chat input placeholderini tarjima qilish
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput && translations[lang].chat_placeholder) {
+                chatInput.placeholder = translations[lang].chat_placeholder;
+            }
         } 
-        document.getElementById('languageSelect').value = currentLang; changeLanguage(currentLang);
+
+        document.getElementById('languageSelect').value = currentLang; 
+        changeLanguage(currentLang);
 
         function toggleTheme() { 
             let t = localStorage.getItem('theme') === 'dark' ? 'light' : 'dark'; 
