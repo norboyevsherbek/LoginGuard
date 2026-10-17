@@ -558,24 +558,30 @@ app.get('/dashboard', requireAuth, (req, res) => {
 // ===============================================
 app.get('/notifications', requireAuth, (req, res) => {
     if (req.session.role === 'admin') {
-        db.all(`SELECT * FROM failed_login_logs ORDER BY attempt_time DESC LIMIT 100`, (err, failedLogs) => {
-            const notifications = (failedLogs || []).map(f => ({
-                title: 'Shubhali harakat / Kirish urinishi!', 
-                msg: `Nishon: <b>${f.username}</b> | IP: <b>${f.ip_address}</b> (${f.location || 'Noma\'lum'})`, 
-                ip: f.ip_address,
-                time: f.attempt_time
-            }));
-            res.render('notifications', { user: req.session, notifications });
+        // Admin sahifaga kirganda barcha o'qilmaganlarni o'qilgan qilamiz
+        db.run(`UPDATE failed_login_logs SET is_read = 1 WHERE is_read = 0`, () => {
+            db.all(`SELECT * FROM failed_login_logs ORDER BY attempt_time DESC LIMIT 100`, (err, failedLogs) => {
+                const notifications = (failedLogs || []).map(f => ({
+                    title: 'Shubhali harakat / Kirish urinishi!', 
+                    msg: `Nishon: <b>${f.username}</b> | IP: <b>${f.ip_address}</b> (${f.location || 'Noma\'lum'})`, 
+                    ip: f.ip_address,
+                    time: f.attempt_time
+                }));
+                res.render('notifications', { user: req.session, notifications });
+            });
         });
     } else {
-        db.all(`SELECT * FROM failed_login_logs WHERE username = ? ORDER BY attempt_time DESC LIMIT 50`, [req.session.username], (err, failedLogs) => {
-            const notifications = (failedLogs || []).map(f => ({
-                title: 'Xavf ogohlantirishi!', 
-                msg: `Sizning hisobingizga <b>${f.ip_address}</b> IP manzilidan xato parol bilan kirishga urinish bo'ldi!`, 
-                ip: f.ip_address,
-                time: f.attempt_time
-            }));
-            res.render('notifications', { user: req.session, notifications });
+        // Oddiy user uchun
+        db.run(`UPDATE failed_login_logs SET is_read = 1 WHERE username = ? AND is_read = 0`, [req.session.username], () => {
+            db.all(`SELECT * FROM failed_login_logs WHERE username = ? ORDER BY attempt_time DESC LIMIT 50`, [req.session.username], (err, failedLogs) => {
+                const notifications = (failedLogs || []).map(f => ({
+                    title: 'Xavf ogohlantirishi!', 
+                    msg: `Sizning hisobingizga <b>${f.ip_address}</b> IP manzilidan xato parol bilan kirishga urinish bo'ldi!`, 
+                    ip: f.ip_address,
+                    time: f.attempt_time
+                }));
+                res.render('notifications', { user: req.session, notifications });
+            });
         });
     }
 });
