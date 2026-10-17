@@ -24,7 +24,8 @@
         .header { position: relative; z-index: 1005; height: 85px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; font-size: 16px; flex-shrink: 0; }
         .header-controls { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; }
         .header-controls i { font-size: 22px !important; cursor: pointer; }
-        .btn { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; font-size: 16px; display: inline-block;}
+        .btn { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn:hover { opacity: 0.85; transform: translateY(-1px); }
         
         /* Profil tugmasi va ochiluvchi oyna uchun maxsus dizayn */
         .profile-wrapper { position: relative; display: inline-block; }
@@ -54,6 +55,10 @@
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
         th, td { padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
         .status { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+        /* Jonli Hujum Ogohlantirish Banneri */
+        #liveAlertBanner { display: none; background: rgba(239, 68, 68, 0.15); border: 2px solid var(--danger); border-radius: 10px; padding: 18px 22px; margin-bottom: 25px; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; animation: pulseAlert 1.5s infinite; }
+        @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); } 70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .modal-content { background: var(--card-bg); padding: 30px; border-radius: 10px; border: 1px solid var(--accent); width: 100%; max-width: 350px; position: relative; }
@@ -125,7 +130,7 @@
                 <a href="/notifications" style="text-decoration:none;">
                     <div style="position: relative; color: var(--text-muted); cursor: pointer; transition: 0.3s; font-size: 22px;">
                         <i class="fas fa-bell" style="<%= typeof notifications !== 'undefined' && notifications && notifications.length > 0 ? 'color: var(--danger);' : '' %>"></i>
-                        <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %><span style="position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; font-weight: bold; animation: pulse 1.5s infinite;"><%= notifications.length %></span><% } %>
+                        <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %><span style="position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; font-weight: bold;"><%= notifications.length %></span><% } %>
                     </div>
                 </a>
 
@@ -134,7 +139,6 @@
                     <option value="uz">UZB</option><option value="en">ENG</option><option value="ru">RUS</option>
                 </select>
                 
-                <!-- YANGILANGAN PROFIL QISMI (Bosilganda menyu ochiladi) -->
                 <div class="profile-wrapper">
                     <div class="user-profile" onclick="toggleProfileMenu()">
                         <% if (typeof user !== 'undefined' && user && user.avatar) { %><img src="<%= user.avatar %>"><% } else { %><i class="fas fa-user-circle"></i><% } %>
@@ -162,19 +166,44 @@
         
         <div class="content-scroll-area">
             <div class="content-body">
+
+                <!-- JONLI XAVFSIZLIK SIGNALI BANNERI (Hujum bo'lganda avtomatik chiqadi) -->
+                <div id="liveAlertBanner">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-skull-crossbones" style="font-size: 32px; color: var(--danger);"></i>
+                        <div>
+                            <div style="font-weight: bold; color: var(--danger); font-size: 16px;" id="alertTitle">🚨 DIQQAT: TIZIMGA HUJUM ANIQLANDI!</div>
+                            <div style="font-size: 14px; color: var(--text-main); margin-top: 4px;" id="alertDetails"></div>
+                        </div>
+                    </div>
+                    <form action="/admin/block-ip" method="POST" style="margin: 0; display: flex; gap: 10px;">
+                        <input type="hidden" name="ip_address" id="alertBlockIpInput" value="">
+                        <button type="submit" class="btn" style="background: var(--danger); color: white;"><i class="fas fa-ban"></i> Shu IP-ni darhol bloklash!</button>
+                        <button type="button" class="btn" onclick="location.reload()" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);">Yangilash</button>
+                    </form>
+                </div>
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0; color: var(--text-main); font-size: 20px;" data-i18n="stat_summary">Statistik Xulosalar</h2>
-                    <select onchange="window.location.href='/dashboard?filter=' + this.value" style="padding: 8px 15px; border-radius: 6px; background: var(--bg-header); color: var(--accent); border: 1px solid var(--accent); font-weight: bold; outline: none; cursor: pointer;">
-                        <option value="all" data-i18n="filter_all" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'all') ? 'selected' : '' %>>Barcha vaqt</option>
-                        <option value="today" data-i18n="filter_today" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'today') ? 'selected' : '' %>>Bugun (24 soat)</option>
-                        <option value="week" data-i18n="filter_week" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'week') ? 'selected' : '' %>>Oxirgi 1 hafta</option>
-                        <option value="month" data-i18n="filter_month" <%= (typeof currentFilter !== 'undefined' && currentFilter === 'month') ? 'selected' : '' %>>Oxirgi 1 oy</option>
+                    <select id="timeFilterSelect" onchange="window.location.href='/dashboard?filter=' + this.value" style="padding: 8px 15px; border-radius: 6px; background: var(--bg-header); color: var(--accent); border: 1px solid var(--accent); font-weight: bold; outline: none; cursor: pointer;">
+                        <option value="all" data-i18n="filter_all">Barcha vaqt</option>
+                        <option value="today" data-i18n="filter_today">Bugun (24 soat)</option>
+                        <option value="week" data-i18n="filter_week">Oxirgi 1 hafta</option>
+                        <option value="month" data-i18n="filter_month">Oxirgi 1 oy</option>
                     </select>
                 </div>
                 
                 <div class="stats-grid">
-                    <div class="stat-card"><div style="font-size:30px; color:var(--accent);"><i class="fas fa-fingerprint"></i></div><div><h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="total_attempts">Jami Urinishlar</h3><div class="value"><%= typeof totalLogsCount !== 'undefined' ? totalLogsCount : 0 %></div></div></div>
+                    <div class="stat-card"><div style="font-size:30px; color:var(--accent);"><i class="fas fa-fingerprint"></i></div><div><h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="total_attempts">Muvaffaqiyatli Kirishlar</h3><div class="value"><%= typeof totalLogsCount !== 'undefined' ? totalLogsCount : 0 %></div></div></div>
+                    
+                    <div class="stat-card" style="border-color: rgba(239, 68, 68, 0.4);">
+                        <div style="font-size:30px; color:var(--danger);"><i class="fas fa-user-secret"></i></div>
+                        <div>
+                            <h3 style="margin:0; font-size:14px; color:var(--text-muted);" data-i18n="failed_attempts_card">Shubhali Urinishlar</h3>
+                            <div class="value" style="color:var(--danger);"><%= (typeof failedLogs !== 'undefined' && failedLogs) ? failedLogs.length : 0 %></div>
+                        </div>
+                    </div>
+
                     <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
                         <a href="/admin/users" class="stat-card" style="text-decoration:none; color:inherit; cursor:pointer; transition:0.3s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
                             <div style="font-size:30px; color:var(--accent);"><i class="fas fa-users-cog"></i></div>
@@ -194,7 +223,55 @@
                         </a>
                     <% } %>
                 </div>
+
+                <!-- YANGI BO'LIM: HUJUMLAR VA SHUBHALI URINISHLAR JADVALI (TEZKOR BLOKLASH UCHUN) -->
+                <% if (typeof failedLogs !== 'undefined' && failedLogs && failedLogs.length > 0) { %>
+                <div class="logs-section" style="border-color: var(--danger);">
+                    <div class="logs-header" style="background: rgba(239, 68, 68, 0.08);">
+                        <h3 style="margin:0; color: var(--danger);"><i class="fas fa-radiation"></i> <span data-i18n="intrusion_logs">Shubhali Urinishlar va Hujumlar (Xavf)</span></h3>
+                        <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+                            <form action="/clear-notifications" method="POST" style="margin:0;">
+                                <button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.15); color: var(--danger);"><i class="fas fa-trash"></i> <span data-i18n="btn_clear">Tozalash</span></button>
+                            </form>
+                        <% } %>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th data-i18n="timestamp">Vaqt</th>
+                                    <th data-i18n="th_target">Nishon / Hujum Turi</th>
+                                    <th data-i18n="ip_address">Hujumchi IP Manzili</th>
+                                    <th data-i18n="location">Joylashuv</th>
+                                    <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %><th data-i18n="action">Tezkor Chora</th><% } %>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% failedLogs.forEach(fLog => { %>
+                                    <tr style="background: rgba(239, 68, 68, 0.03);">
+                                        <td><%= fLog.attempt_time ? new Date(fLog.attempt_time + 'Z').toLocaleString('uz-UZ') : "Noma'lum" %></td>
+                                        <td style="font-weight: bold; color: var(--danger);"><%= fLog.username || "Noma'lum" %></td>
+                                        <td style="color: var(--accent); font-family: monospace; font-weight: bold;"><%= fLog.ip_address %></td>
+                                        <td class="location-cell" data-raw-loc="<%= fLog.location || '🌍 Noma\'lum' %>"><%= fLog.location || "🌍 Noma'lum" %></td>
+                                        <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+                                            <td>
+                                                <form action="/admin/block-ip" method="POST" style="margin:0;">
+                                                    <input type="hidden" name="ip_address" value="<%= fLog.ip_address %>">
+                                                    <button type="submit" class="btn" style="background: var(--danger); color: white;">
+                                                        <i class="fas fa-ban"></i> <span data-i18n="btn_block">IP-ni Bloklash</span>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        <% } %>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <% } %>
                 
+                <!-- MUVAFFAQIYATLI KIRISHLAR JADVALI -->
                 <div class="logs-section">
                     <div class="logs-header">
                         <h3 style="margin:0;"><i class="fas fa-list-ul" style="color: var(--accent);"></i> <span data-i18n="recent_logs">So'nggi Kirishlar Tarixi</span></h3>
@@ -220,14 +297,14 @@
                                             <% } %>
                                             <td style="color: var(--accent); font-family: monospace;"><%= log.ip_address %></td>
                                             
-                                            <!-- Joylashuvni tilga qarab avtomatik o'zgaradigan qism -->
-                                            <td class="location-cell" data-raw-loc="<%= log.location || "🌍 Noma'lum" %>"><%= log.location || "🌍 Noma'lum" %></td>
+                                            <!-- Qo'shtirnoq xatosi to'g'rilangan qator -->
+                                            <td class="location-cell" data-raw-loc="<%= log.location || '🌍 Noma\'lum' %>"><%= log.location || "🌍 Noma'lum" %></td>
                                             
                                             <td><% if (log.is_blocked) { %> <span class="status" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);" data-i18n="status_blocked">Bloklangan</span> <% } else { %> <span class="status" style="background: rgba(16, 185, 129, 0.1); color: var(--success);" data-i18n="status_success">Muvaffaqiyatli</span> <% } %></td>
                                             <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
                                                 <td>
-                                                    <% if (log.is_blocked) { %> <form action="/admin/unblock-ip" method="POST"><input type="hidden" name="ip_address" value="<%= log.ip_address %>"><button type="submit" class="btn" style="background: rgba(16, 185, 129, 0.1); color: var(--success);" data-i18n="btn_unblock">Ochish</button></form>
-                                                    <% } else { %> <form action="/admin/block-ip" method="POST"><input type="hidden" name="ip_address" value="<%= log.ip_address %>"><button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);" data-i18n="btn_block">Bloklash</button></form> <% } %>
+                                                    <% if (log.is_blocked) { %> <form action="/admin/unblock-ip" method="POST" style="margin:0;"><input type="hidden" name="ip_address" value="<%= log.ip_address %>"><button type="submit" class="btn" style="background: rgba(16, 185, 129, 0.1); color: var(--success);" data-i18n="btn_unblock">Ochish</button></form>
+                                                    <% } else { %> <form action="/admin/block-ip" method="POST" style="margin:0;"><input type="hidden" name="ip_address" value="<%= log.ip_address %>"><button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);" data-i18n="btn_block">Bloklash</button></form> <% } %>
                                                 </td>
                                             <% } %>
                                         </tr>
@@ -271,13 +348,16 @@
     <script src="/socket.io/socket.io.js"></script>
     
     <script>
-        // Profil menyusini ochish/yopish funksiyasi
+        // Filtr qiymatini JS orqali belgilash (VS Code EJS xatosi bermasligi uchun)
+        const activeFilter = "<%= typeof currentFilter !== 'undefined' ? currentFilter : 'all' %>";
+        const filterSelect = document.getElementById('timeFilterSelect');
+        if (filterSelect) filterSelect.value = activeFilter;
+
         function toggleProfileMenu() {
             const dropdown = document.getElementById('profileDropdown');
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
         }
 
-        // Boshqa joy bosilganda profil menyusini yopish
         document.addEventListener('click', function(event) {
             const wrapper = document.querySelector('.profile-wrapper');
             const dropdown = document.getElementById('profileDropdown');
@@ -309,7 +389,11 @@
                 filter_today: "Today (24h)",
                 filter_week: "Last 1 week",
                 filter_month: "Last 1 month",
-                total_attempts: "Attempts", 
+                total_attempts: "Successful Logins", 
+                failed_attempts_card: "Suspicious Attempts",
+                intrusion_logs: "Suspicious Attempts & Intrusions (Threat)",
+                th_target: "Target / Attack Type",
+                btn_clear: "Clear",
                 total_users: "All Users", 
                 blocked_ips: "Blocked IPs", 
                 recent_logs: "Recent Logs", 
@@ -322,7 +406,7 @@
                 action: "Action", 
                 status_success: "Success", 
                 status_blocked: "Blocked", 
-                btn_block: "Block", 
+                btn_block: "Block IP", 
                 btn_unblock: "Unblock", 
                 no_logs: "No logs.", 
                 modal_contact_title: "Contact Admin",
@@ -353,7 +437,11 @@
                 filter_today: "Bugun (24 soat)",
                 filter_week: "Oxirgi 1 hafta",
                 filter_month: "Oxirgi 1 oy",
-                total_attempts: "Urinishlar", 
+                total_attempts: "Muvaffaqiyatli Kirishlar", 
+                failed_attempts_card: "Shubhali Urinishlar",
+                intrusion_logs: "Shubhali Urinishlar va Hujumlar (Xavf)",
+                th_target: "Nishon / Hujum Turi",
+                btn_clear: "Tozalash",
                 total_users: "Barcha Foydalanuvchilar", 
                 blocked_ips: "Bloklangan IPlar", 
                 recent_logs: "So'nggi Kirishlar Tarixi", 
@@ -366,7 +454,7 @@
                 action: "Harakat", 
                 status_success: "Muvaffaqiyatli", 
                 status_blocked: "Bloklangan", 
-                btn_block: "Bloklash", 
+                btn_block: "IP-ni Bloklash", 
                 btn_unblock: "Ochish", 
                 no_logs: "Ma'lumot topilmadi.", 
                 modal_contact_title: "Admin bilan bog'lanish",
@@ -397,7 +485,11 @@
                 filter_today: "Сегодня (24 часа)",
                 filter_week: "За последнюю неделю",
                 filter_month: "За последний месяц",
-                total_attempts: "Входов", 
+                total_attempts: "Успешных входов", 
+                failed_attempts_card: "Подозрительные попытки",
+                intrusion_logs: "Подозрительные попытки и атаки (Угроза)",
+                th_target: "Цель / Тип атаки",
+                btn_clear: "Очистить",
                 total_users: "Все пользователи", 
                 blocked_ips: "Заблокировано", 
                 recent_logs: "История", 
@@ -410,7 +502,7 @@
                 action: "Действие", 
                 status_success: "Успешно", 
                 status_blocked: "Блок", 
-                btn_block: "Блок", 
+                btn_block: "Блокировать IP", 
                 btn_unblock: "Разблок", 
                 no_logs: "Пусто.", 
                 modal_contact_title: "Связаться с админом",
@@ -427,7 +519,6 @@
             currentLang = lang; 
             localStorage.setItem('lang', lang); 
             
-            // Barcha data-i18n atributli elementlarni tarjima qilish
             document.querySelectorAll('[data-i18n]').forEach(el => { 
                 const key = el.getAttribute('data-i18n');
                 if (translations[lang] && translations[lang][key]) { 
@@ -435,7 +526,6 @@
                 } 
             }); 
 
-            // Jadvaldagi "Noma'lum" va "Lokal tarmoq" yozuvlarini tarjima qilish
             document.querySelectorAll('.location-cell').forEach(el => {
                 let raw = el.getAttribute('data-raw-loc') || '';
                 if (raw.includes("Noma'lum") || raw.includes("Unknown") || raw.includes("Неизвестно")) {
@@ -445,7 +535,6 @@
                 }
             });
 
-            // Chat input placeholderini tarjima qilish
             const chatInput = document.getElementById('chatInput');
             if (chatInput && translations[lang].chat_placeholder) {
                 chatInput.placeholder = translations[lang].chat_placeholder;
@@ -467,11 +556,27 @@
         const socket = io(); 
         const myUsername = "<%= typeof user !== 'undefined' && user ? user.username : 'Mehmon' %>"; 
         const chatSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        const alarmSound = new Audio('https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3');
+
         socket.on('message', (data) => { 
             const m = document.getElementById('chatMessages'); let c = data.username === myUsername ? 'msg-me' : (data.role === 'admin' ? 'msg-admin' : 'msg-other'); 
             m.innerHTML += `<div class="msg ${c}"><b>${data.username}:</b> <br> ${data.text}</div>`; 
             m.scrollTop = m.scrollHeight; if (data.username !== myUsername) chatSound.play().catch(e=>{}); 
         });
+
+        // JONLI XAVFSIZLIK SIGNALI (Hujum bo'lgan zahoti ekranda qizil banner va ovoz chiqaradi)
+        socket.on('security_alert', (data) => {
+            alarmSound.play().catch(e => {});
+            const banner = document.getElementById('liveAlertBanner');
+            const details = document.getElementById('alertDetails');
+            const ipInput = document.getElementById('alertBlockIpInput');
+            if (banner && details && ipInput) {
+                details.innerHTML = `<b>Hujum turi:</b> ${data.type} &nbsp;|&nbsp; <b>Hujumchi IP:</b> <code style="color:#64ffda;font-size:15px;">${data.ip}</code> (${data.location}) &nbsp;|&nbsp; <b>Nishon:</b> ${data.url}`;
+                ipInput.value = data.ip;
+                banner.style.display = 'flex';
+            }
+        });
+
         function sendMessage() { const i = document.getElementById('chatInput'); if (i.value.trim() !== "") { socket.emit('chatMessage', i.value.trim()); i.value = ''; } }
 
         const menuBtn = document.getElementById('mobile-menu-btn');

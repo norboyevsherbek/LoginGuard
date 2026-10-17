@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Telegram Bot Sozlamalari
+// Telegram Bot Sozlamalari (Eslatma: Tokenni .env faylda saqlash tavsiya etiladi)
 const TELEGRAM_BOT_TOKEN = '8901554970:AAHBdjtt0SGXq9gTjWpo1x6bSioc3RmFRhc'; 
 const ADMIN_CHAT_ID = '8058840101'; 
 const BOT_USERNAME = '@logingoardbot'; 
@@ -44,9 +44,18 @@ if (TELEGRAM_BOT_TOKEN && TELEGRAM_BOT_TOKEN.length > 30) {
        .catch(err => console.error("❌ Bot xatosi:", err));
 }
 
-function notifyAdmin(text) {
+// Adminga oddiy yoki tugmali (IP bloklash uchun) xabar yuborish
+function notifyAdmin(text, targetIp = null) {
     if (bot && ADMIN_CHAT_ID) {
-        bot.telegram.sendMessage(ADMIN_CHAT_ID, text, { parse_mode: 'HTML' }).catch(err => {});
+        const extra = { parse_mode: 'HTML' };
+        if (targetIp) {
+            extra.reply_markup = {
+                inline_keyboard: [
+                    [{ text: `🚫 IP-ni darhol bloklash (${targetIp})`, callback_data: `block_${targetIp}` }]
+                ]
+            };
+        }
+        bot.telegram.sendMessage(ADMIN_CHAT_ID, text, extra).catch(err => {});
     }
 }
 
@@ -72,7 +81,6 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS blocked_ips (id INTEGER PRIMARY KEY AUTOINCREMENT, ip_address TEXT UNIQUE)`);
     db.run(`CREATE TABLE IF NOT EXISTS failed_login_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, ip_address TEXT, attempt_time DATETIME DEFAULT CURRENT_TIMESTAMP, location TEXT)`);
     
-    // Eski bazaga yangi ustunlar qoshish (xato bermasligi uchun e'tiborsiz qoldiriladi)
     db.run(`ALTER TABLE users ADD COLUMN is_2fa_enabled INTEGER DEFAULT 0`, (err) => {});
     db.run(`ALTER TABLE users ADD COLUMN is_blocked INTEGER DEFAULT 0`, (err) => {});
     db.run(`ALTER TABLE login_logs ADD COLUMN location TEXT`, (err) => {});
@@ -88,7 +96,16 @@ db.serialize(() => {
     });
 });
 
-// Yordamchi funksiyalar
+// ===============================================
+// YORDAMCHI VA XAVFSIZLIK FUNKSIYALARI
+// ===============================================
+function getClientIp(req) {
+    const forwarded = req.headers['x-forwarded-for'];
+    let ip = forwarded ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
+    if (ip === '::1' || ip === '::ffff:127.0.0.1') return '127.0.0.1';
+    return ip ? ip.replace('::ffff:', '') : 'Noma\'lum';
+}
+
 function getFlagEmoji(countryCode) {
     if (!countryCode) return '🌍';
     const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
@@ -109,16 +126,99 @@ function getDeviceInfo(ua) {
     else if (ua.includes("Mac OS")) os = "MacOS"; 
     else if (ua.includes("Android")) os = "Android"; 
     else if (ua.includes("iPhone")) os = "iOS";
+    else if (ua.includes("Linux")) os = "Linux";
     
     if (ua.includes("Chrome")) browser = "Chrome"; 
     else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+    else if (ua.includes("Firefox")) browser = "Firefox";
     
     return `${os} / ${browser}`;
 }
 
-// Himoya qatlamlari
+// Hujumni qayd etish, Adminga (Telegram + Jonli Dashboard) yuborish
+function triggerIntrusionAlert(req, attackType, detail = '') {
+    const ip = getClientIp(req);
+    const location = getLocation(ip);
+    const device = getDeviceInfo(req.headers['user-agent']);
+    const targetUser = req.session?.username || req.body?.username || `[Hujum: ${attackType}]`;
+
+    // 1. Bazaga yozish (Dashboard va Notifications da chiqishi uchun)
+    db.run(`INSERT INTO failed_login_logs (username, ip_address, location) VALUES (?, ?, ?)`, 
+        [`⚠️ ${attackType} (${targetUser})`, ip, location]
+    );
+
+    // 2. Telegram orqali Adminni uyg'otish (Bloklash tugmasi bilan)
+    const msg = `🚨 <b>XAVFSIZLIK OGOHLANTIRISHI (HUJUM)!</b>\n\n` +
+                `🛑 <b>Hujum turi:</b> ${attackType}\n` +
+                `🌐 <b>Hujumchi IP:</b> <code>${ip}</code>\n` +
+                `📍 <b>Joylashuv:</b> ${location}\n` +
+                `🖥 <b>Qurilma:</b> ${device}\n` +
+                `🔗 <b>Manzil (URL):</b> <code>${req.originalUrl}</code>\n` +
+                (detail ? `📝 <b>Ma'lumot:</b> <code>${detail.substring(0, 100)}</code>` : '');
+
+    notifyAdmin(msg, ip);
+
+    // 3. Saytdagi Adminlarga Socket.io orqali jonli signal yuborish
+    io.to('admins').emit('security_alert', {
+        type: attackType,
+        ip: ip,
+        location: location,
+        url: req.originalUrl,
+        time: new Date().toLocaleTimeString('uz-UZ')
+    });
+}
+
+// ===============================================
+// GLOBAL XAVFSIZLIK QALQONI (WAF MIDDLEWARE)
+// ===============================================
+app.use((req, res, next) => {
+    const ip = getClientIp(req);
+
+    // 1. IP bloklanganlar ro'yxatida bormi? (Butun sayt bo'yicha tekshiruv)
+    db.get(`SELECT * FROM blocked_ips WHERE ip_address = ?`, [ip], (err, blocked) => {
+        if (blocked) {
+            return res.status(403).send(`
+                <body style="background:#0f172a;color:#ef4444;font-family:sans-serif;text-align:center;padding-top:15%;">
+                    <h1>🚫 KIRISH TAQIQLANGAN (403)</h1>
+                    <p style="color:#94a3b8;">Sizning IP manzilingiz (<b>${ip}</b>) xavfsizlik qoidalarini buzgani uchun bloklangan!</p>
+                </body>
+            `);
+        }
+
+        // 2. Yashirin fayllarni o'g'irlashga urinish (Honeypot / Path Traversal)
+        const rawUrl = decodeURIComponent(req.originalUrl).toLowerCase();
+        const forbiddenPaths = ['.env', '.git', 'database.sqlite', 'wp-admin', 'phpmyadmin', '../', '..\\', '/etc/passwd'];
+        if (forbiddenPaths.some(p => rawUrl.includes(p))) {
+            triggerIntrusionAlert(req, "Maxfiy fayllarga buzib kirish", req.originalUrl);
+            // Bunday xakerlarni darhol avtomatik bloklaymiz!
+            db.run(`INSERT OR IGNORE INTO blocked_ips (ip_address) VALUES (?)`, [ip]);
+            return res.status(403).send("Xakerlik urinishi aniqlandi! IP manzilingiz avtomatik bloklandi.");
+        }
+
+        // 3. SQL Injection va XSS hujumlarini tekshirish
+        const payload = JSON.stringify(req.body || {}) + JSON.stringify(req.query || {});
+        const sqliOrXssPattern = /(\b(union\s+select|drop\s+table|insert\s+into|delete\s+from|update\s+users)\b)|('(\s*or\s*|\s*and\s*).*?=)|(<script[\s\S]*?>)|(\bjavascript:)|(onerror\s*=)|(onload\s*=)/i;
+
+        if (sqliOrXssPattern.test(payload) || sqliOrXssPattern.test(rawUrl)) {
+            triggerIntrusionAlert(req, "SQL Injection / XSS Hujumi", payload);
+            return res.status(403).send("Shubhali kod aniqlandi! Administratorlar xabardor qilindi.");
+        }
+
+        next();
+    });
+});
+
+// ===============================================
+// HIMOYA QATLAMLARI (AUTH & ADMIN BYPASS DETECTION)
+// ===============================================
 const requireAuth = (req, res, next) => {
-    if (!req.session.userId) return res.redirect('/login');
+    if (!req.session.userId) {
+        // Agar kimdir login qilmasdan /admin sahifalariga kirishga urinsa:
+        if (req.originalUrl.startsWith('/admin')) {
+            triggerIntrusionAlert(req, "Avtorizatsiyasiz Admin panelga urinish");
+        }
+        return res.redirect('/login');
+    }
     db.get(`SELECT session_token, is_blocked FROM users WHERE id = ?`, [req.session.userId], (err, user) => {
         if (!user || user.session_token !== req.session.token || user.is_blocked === 1) { 
             req.session.destroy(); 
@@ -132,15 +232,42 @@ const requireAdmin = (req, res, next) => {
     if (req.session.role === 'admin') {
         next();
     } else {
-        res.status(403).send("Ruxsat yo'q");
+        // Oddiy user Admin sahifasini chetlab o'tmoqchi bo'lsa:
+        triggerIntrusionAlert(req, "Admin huquqini chetlab o'tish (Privilege Escalation)", `User: ${req.session.username}`);
+        res.status(403).send("Ruxsat yo'q! Ushbu harakatingiz xavfsizlik jurnaliga yozildi.");
     }
 };
 
 // ===============================================
-// TELEGRAM BOT MANTIG'I (CHAT VA 2FA UCHUN)
+// TELEGRAM BOT MANTIG'I (CHAT, 2FA VA TEZKOR BLOKLASH)
 // ===============================================
 if (bot) {
     bot.start((ctx) => handleBotConnection(ctx, ctx.payload));
+
+    // Telegram tugmasi orqali IP-ni 1-bosishda bloklash!
+    bot.action(/^block_(.+)$/, (ctx) => {
+        if (ctx.chat.id.toString() !== ADMIN_CHAT_ID) return;
+        const ipToBlock = ctx.match[1];
+        db.run(`INSERT OR IGNORE INTO blocked_ips (ip_address) VALUES (?)`, [ipToBlock], (err) => {
+            ctx.answerCbQuery(`✅ ${ipToBlock} bloklandi!`);
+            ctx.editMessageReplyMarkup({
+                inline_keyboard: [[{ text: `✅ Bloklangan (${ipToBlock})`, callback_data: `unblock_${ipToBlock}` }]]
+            }).catch(() => {});
+        });
+    });
+
+    // Telegram tugmasi orqali IP-ni blokdan chiqarish
+    bot.action(/^unblock_(.+)$/, (ctx) => {
+        if (ctx.chat.id.toString() !== ADMIN_CHAT_ID) return;
+        const ipToUnblock = ctx.match[1];
+        db.run(`DELETE FROM blocked_ips WHERE ip_address = ?`, [ipToUnblock], (err) => {
+            ctx.answerCbQuery(`🔓 ${ipToUnblock} blokdan olindi!`);
+            ctx.editMessageReplyMarkup({
+                inline_keyboard: [[{ text: `🚫 Qayta bloklash (${ipToUnblock})`, callback_data: `block_${ipToUnblock}` }]]
+            }).catch(() => {});
+        });
+    });
+
     bot.on('text', (ctx) => {
         const text = ctx.message.text.trim();
         const chatId = ctx.chat.id.toString();
@@ -159,15 +286,26 @@ if (bot) {
     });
 
     function handleBotConnection(ctx, requestedUsername) {
-        const chatId = ctx.chat.id; 
+        const chatId = ctx.chat.id.toString(); 
         if (!requestedUsername) {
-            return ctx.replyWithHTML("👋 <b>Salom! Bu LoginGuard boti.</b>\n\nSaytdagi profilingizni ulash uchun loginingizni yozib yuboring.\nMasalan: <code>admin</code>\n\n<i>Yoki saytdan kelgan chat xabarlariga to'g'ridan-to'g'ri shu yerda javob yozishingiz mumkin.</i>");
+            return ctx.replyWithHTML("👋 <b>Salom! Bu LoginGuard boti.</b>\n\nSaytdagi profilingizni ulash uchun loginingizni yozib yuboring.\nMasalan: <code>user123</code>");
         }
         
         db.get(`SELECT * FROM users WHERE username = ?`, [requestedUsername], (err, user) => {
-            if (!user) return ctx.replyWithHTML(`❌ <b>${requestedUsername}</b> logini tizimda topilmadi. To'g'ri login yozganingizga ishonch hosil qiling.`);
+            if (!user) return ctx.replyWithHTML(`❌ <b>${requestedUsername}</b> logini tizimda topilmadi.`);
             
-            db.run(`UPDATE users SET telegram_chat_id = ?, is_2fa_enabled = 1 WHERE id = ?`, [chatId.toString(), user.id], () => {
+            // XAVFSIZLIK TEKSHIRUVI: Boshqa odam birovning (yoki adminning) profilini o'g'irlay olmasligi uchun!
+            if (user.telegram_chat_id && user.telegram_chat_id !== chatId) {
+                notifyAdmin(`🚨 <b>TELEGRAM BOT HUJUMI!</b>\nKimdir (ChatID: <code>${chatId}</code>, @${ctx.from.username || 'noma\'lum'}) <b>${user.username}</b> akkauntini bot orqali egallab olishga urindi!`);
+                return ctx.replyWithHTML(`⛔ <b>Xavfsizlik xatosi!</b> Ushbu profil boshqa Telegram hisobiga biriktirilgan.`);
+            }
+
+            if (user.role === 'admin' && chatId !== ADMIN_CHAT_ID) {
+                notifyAdmin(`🚨 <b>ADMIN AKKAUNTGA HUJUM (Bot orqali)!</b>\nChatID: <code>${chatId}</code> (@${ctx.from.username || 'noma\'lum'})`);
+                return ctx.replyWithHTML(`⛔ Admin profilini faqat tizim egasi ulay oladi!`);
+            }
+            
+            db.run(`UPDATE users SET telegram_chat_id = ?, is_2fa_enabled = 1 WHERE id = ?`, [chatId, user.id], () => {
                 const tempPassword = Math.floor(100000 + Math.random() * 900000).toString(); 
                 bcrypt.hash(tempPassword, 10, (err, hash) => {
                     db.run(`UPDATE users SET password = ? WHERE id = ?`, [hash, user.id], () => {
@@ -189,27 +327,25 @@ const failedAttempts = {};
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    let ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress; 
-    if(ipAddress === '::1') ipAddress = '127.0.0.1'; 
-    
+    const ipAddress = getClientIp(req);
     const now = Date.now();
 
-    // Spam kirishni oldini olish
+    // Spam kirishni oldini olish (Sintaksis xatosi to'g'rilandi)
     if (failedAttempts[ipAddress] && failedAttempts[ipAddress].blockUntil > now) {
-        return res.render('login', { error: `Ko'p xato! ${Math.ceil((failedAttempts[ipAddress].blockUntil - now) / 1000)} soniya kuting.`, success: null });
+        const waitSec = Math.ceil((failedAttempts[ipAddress].blockUntil - now) / 1000);
+        return res.render('login', { error: `Ko'p xato urinish! ${waitSec} soniya kuting.`, success: null });
     }
 
-    // IP bloklanganligini tekshirish
     db.get(`SELECT * FROM blocked_ips WHERE ip_address = ?`, [ipAddress], (err, blocked) => {
         if (blocked) return res.render('login', { error: "XATOLIK: Sizning IP bloklangan!", success: null });
         
         db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, user) => {
-            if (!user) return recordFailedAttempt(ipAddress, username, res);
+            if (!user) return recordFailedAttempt(req, ipAddress, username, res);
             if (user.is_blocked === 1) return res.render('login', { error: "Hisobingiz administrator tomonidan bloklangan!", success: null });
 
             bcrypt.compare(password, user.password, (err, isMatch) => {
                 if (isMatch) {
-                    delete failedAttempts[ipAddress]; // Muvaffaqiyatli bo'lsa xatolarni tozalash
+                    delete failedAttempts[ipAddress];
                     
                     if (user.telegram_chat_id && user.is_2fa_enabled === 1) {
                         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -238,38 +374,57 @@ app.post('/login', (req, res) => {
                         });
                     }
                 } else {
-                    return recordFailedAttempt(ipAddress, username, res);
+                    return recordFailedAttempt(req, ipAddress, username, res);
                 }
             });   
         });
     });
 });
 
-// Xato urinishlarni yozib olish funksiyasi
-function recordFailedAttempt(ipAddress, username, res) {
+// Xato urinishlarni yozib olish va Brute-Force himoyasi
+function recordFailedAttempt(req, ipAddress, username, res) {
     const location = getLocation(ipAddress);
+    const device = getDeviceInfo(req.headers['user-agent']);
+
     db.run(`INSERT INTO failed_login_logs (username, ip_address, location) VALUES (?, ?, ?)`, [username, ipAddress, location], () => {
         if (!failedAttempts[ipAddress]) failedAttempts[ipAddress] = { count: 0, blockUntil: 0 };
         failedAttempts[ipAddress].count += 1; 
         
         let attempts = failedAttempts[ipAddress].count;
-        if (attempts === 5) {
+
+        // Jonli ravishda adminga dashboardda ko'rsatish
+        io.to('admins').emit('security_alert', {
+            type: `Xato parol (${attempts}-urinish)`,
+            ip: ipAddress,
+            location: location,
+            url: `Login: ${username}`,
+            time: new Date().toLocaleTimeString('uz-UZ')
+        });
+
+        if (attempts === 3) {
+            notifyAdmin(`⚠️ <b>SHUBHALI URINISH (3 marta xato)</b>\n👤 Login: <code>${username}</code>\n🌐 IP: <code>${ipAddress}</code>\n🖥 Qurilma: ${device}\n📍 ${location}`, ipAddress);
+        } else if (attempts === 5) {
             failedAttempts[ipAddress].blockUntil = Date.now() + (30 * 1000);
-            notifyAdmin(`⚠️ <b>30 SONIYA BLOK</b>\nLogin: <code>${username}</code>\nIP: <code>${ipAddress}</code>\n📍 ${location}`);
-            return res.render('login', { error: `5 ta xato! 30 soniya kuting.`, success: null });
+            notifyAdmin(`🚨 <b>BRUTE-FORCE: 30 SONIYA BLOK (5 ta xato)</b>\n👤 Login: <code>${username}</code>\n🌐 IP: <code>${ipAddress}</code>\n📍 ${location}`, ipAddress);
+            return res.render('login', { error: `5 ta xato urinish! 30 soniya kuting.`, success: null });
+        } else if (attempts >= 10) {
+            // 10 marta xato qilsa, avtomatik qora ro'yxatga (blocked_ips) tiqamiz!
+            db.run(`INSERT OR IGNORE INTO blocked_ips (ip_address) VALUES (?)`, [ipAddress]);
+            delete failedAttempts[ipAddress];
+            notifyAdmin(`🛑 <b>AVTOMATIK BLOKLANDI (10 ta xato urinish)!</b>\n👤 Login: <code>${username}</code>\n🌐 IP: <code>${ipAddress}</code>\n📍 ${location}`);
+            return res.render('login', { error: `Xavfsizlik tizimi: IP manzilingiz doimiy bloklandi!`, success: null });
         } else if (attempts >= 7) {
             failedAttempts[ipAddress].blockUntil = Date.now() + (60 * 1000); 
-            notifyAdmin(`🚨 <b>1 DAQIQA BLOK</b>\nLogin: <code>${username}</code>\nIP: <code>${ipAddress}</code>\n📍 ${location}`);
+            notifyAdmin(`🚨 <b>1 DAQIQA BLOK (${attempts} ta xato)</b>\n👤 Login: <code>${username}</code>\n🌐 IP: <code>${ipAddress}</code>\n📍 ${location}`, ipAddress);
             return res.render('login', { error: `Juda ko'p xato! 1 daqiqa kuting.`, success: null });
         }
         return res.render('login', { error: "Parol yoki login noto'g'ri!", success: null });
     });
 }
 
-// 2FA Tasdiqlash
+// 2FA Tasdiqlash (Brute-force himoyasi bilan)
 app.post('/verify-2fa', (req, res) => {
-    let ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress; 
-    if(ipAddress === '::1') ipAddress = '127.0.0.1';
+    const ipAddress = getClientIp(req);
     
     if (req.session.otp && req.session.otp === req.body.otp) {
         const sessionToken = Math.random().toString(36).substring(2); 
@@ -282,18 +437,26 @@ app.post('/verify-2fa', (req, res) => {
             req.session.username = req.session.pendingUsername; 
             req.session.role = req.session.pendingRole; 
             req.session.avatar = req.session.pendingAvatar;
+            delete req.session.otp;
+            delete req.session.otpAttempts;
             
             db.run(`INSERT INTO login_logs (user_id, ip_address, device_info, location) VALUES (?, ?, ?, ?)`, [req.session.userId, ipAddress, deviceInfo, location]);
             res.redirect('/dashboard');
         });
     } else {
+        req.session.otpAttempts = (req.session.otpAttempts || 0) + 1;
+        if (req.session.otpAttempts >= 3) {
+            triggerIntrusionAlert(req, "2FA Kodni buzishga urinish", `User: ${req.session.pendingUsername}`);
+            req.session.destroy();
+            return res.render('login', { error: "2FA kod 3 marta xato terildi! Qaytadan kiring.", success: null });
+        }
         res.render('login', { error: "Tasdiqlash kodi xato!", success: null, requires2FA: true });
     }
 });
 
 app.post('/forgot-password', (req, res) => {
     db.get(`SELECT * FROM users WHERE username = ?`, [req.body.username], (err, user) => {
-        if (!user) return res.json({ success: false, message: "Bunday tizimda yo'q!" });
+        if (!user) return res.json({ success: false, message: "Bunday foydalanuvchi tizimda yo'q!" });
         res.json({ success: true, message: "Botga o'ting", redirectUrl: `https://t.me/${BOT_USERNAME.replace('@', '')}?start=${user.username}` });
     });
 });
@@ -307,7 +470,7 @@ app.post('/register', (req, res) => {
     });
 });
 
-app.get('/admin/export-logs', requireAdmin, (req, res) => {
+app.get('/admin/export-logs', requireAuth, requireAdmin, (req, res) => {
     db.all(`SELECT users.username, login_logs.ip_address, login_logs.location, login_logs.device_info, login_logs.login_time FROM login_logs JOIN users ON login_logs.user_id = users.id ORDER BY login_time DESC`, (err, logs) => {
         let csv = 'Login, IP Manzil, Joylashuv, Qurilma, Vaqt\n';
         logs.forEach(row => { 
@@ -397,8 +560,9 @@ app.get('/notifications', requireAuth, (req, res) => {
     if (req.session.role === 'admin') {
         db.all(`SELECT * FROM failed_login_logs ORDER BY attempt_time DESC LIMIT 100`, (err, failedLogs) => {
             const notifications = (failedLogs || []).map(f => ({
-                title: 'Shubhali kirish urinishi!', 
-                msg: `<b>${f.username}</b> akkauntiga <b>${f.ip_address}</b> IP manzilidan noto'g'ri parol kiritildi.`, 
+                title: 'Shubhali harakat / Kirish urinishi!', 
+                msg: `Nishon: <b>${f.username}</b> | IP: <b>${f.ip_address}</b> (${f.location || 'Noma\'lum'})`, 
+                ip: f.ip_address,
                 time: f.attempt_time
             }));
             res.render('notifications', { user: req.session, notifications });
@@ -408,6 +572,7 @@ app.get('/notifications', requireAuth, (req, res) => {
             const notifications = (failedLogs || []).map(f => ({
                 title: 'Xavf ogohlantirishi!', 
                 msg: `Sizning hisobingizga <b>${f.ip_address}</b> IP manzilidan xato parol bilan kirishga urinish bo'ldi!`, 
+                ip: f.ip_address,
                 time: f.attempt_time
             }));
             res.render('notifications', { user: req.session, notifications });
@@ -466,11 +631,15 @@ app.get('/admin/blocked-ips', requireAuth, requireAdmin, (req, res) => {
     }); 
 });
 
-app.post('/admin/block-ip', requireAdmin, (req, res) => { 
-    db.run(`INSERT OR IGNORE INTO blocked_ips (ip_address) VALUES (?)`, [req.body.ip_address], () => res.redirect('back')); 
+app.post('/admin/block-ip', requireAuth, requireAdmin, (req, res) => { 
+    const ip = req.body.ip_address;
+    db.run(`INSERT OR IGNORE INTO blocked_ips (ip_address) VALUES (?)`, [ip], () => {
+        notifyAdmin(`🛡 <b>IP BLOKLANDI (Admin Panel orqali)</b>\n🌐 IP: <code>${ip}</code>`);
+        res.redirect('back');
+    }); 
 });
 
-app.post('/admin/unblock-ip', requireAdmin, (req, res) => { 
+app.post('/admin/unblock-ip', requireAuth, requireAdmin, (req, res) => { 
     db.run(`DELETE FROM blocked_ips WHERE ip_address = ?`, [req.body.ip_address], () => res.redirect('back')); 
 });
 
@@ -555,7 +724,7 @@ app.get('/logout', (req, res) => {
 });
 
 // ===============================================
-// JONLI CHAT UCHUN SOCKET.IO MANTIG'I
+// JONLI CHAT VA SECURITY ALERT UCHUN SOCKET.IO
 // ===============================================
 io.on('connection', (socket) => {
     const req = socket.request; 
@@ -567,7 +736,6 @@ io.on('connection', (socket) => {
     socket.on('chatMessage', (msg) => { 
         io.emit('message', { username, text: msg, role: userRole }); 
         
-        // Agar yozayotgan odam Admin bo'lmasa, uni Telegramga jo'natish
         if (userRole !== 'admin' && bot && ADMIN_CHAT_ID) {
             const telegramMsg = `💬 <b>YANGI XABAR (Jonli Chat)</b>\n👤 Foydalanuvchi: <b>${username}</b>\n📝 Matn: ${msg}`;
             bot.telegram.sendMessage(ADMIN_CHAT_ID, telegramMsg, { parse_mode: 'HTML' }).catch(err => console.error(err));
@@ -575,4 +743,4 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(PORT, () => console.log(`Server: http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server ishga tushdi: http://localhost:${PORT}`));

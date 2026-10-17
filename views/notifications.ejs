@@ -105,12 +105,25 @@
                 
                 <% if (typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %>
                     <% notifications.forEach(n => { %>
-                        <div class="notif-card">
-                            <div class="notif-icon"><i class="fas fa-shield-cat"></i></div>
-                            <div class="notif-content">
-                                <div class="notif-title"><%= n.title %></div>
-                                <div class="notif-text"><%- n.msg %></div>
-                                <div class="notif-time"><i class="fas fa-clock"></i> <%= n.time ? new Date(n.time + 'Z').toLocaleString('uz-UZ') : '' %></div>
+                        <div class="notif-card" style="margin-bottom: 15px; padding: 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: flex-start; gap: 15px;">
+                            <div class="notif-icon"><i class="fas fa-shield-cat" style="font-size: 24px; color: var(--danger);"></i></div>
+                            <div class="notif-content" style="flex: 1;">
+                                <div class="notif-title" style="font-weight: bold; color: var(--text-main); margin-bottom: 5px;"><%= n.title %></div>
+                                <div class="notif-text" style="color: var(--text-muted); font-size: 14px; margin-bottom: 8px;"><%- n.msg %></div>
+                                
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                                    <div class="notif-time" style="font-size: 12px; color: var(--text-muted);"><i class="fas fa-clock"></i> <%= n.time ? new Date(n.time + 'Z').toLocaleString('uz-UZ') : '' %></div>
+                                    
+                                    <!-- Tezkor IP Bloklash tugmasi -->
+                                    <% if (typeof user !== 'undefined' && user && user.role === 'admin' && n.ip) { %>
+                                        <form action="/admin/block-ip" method="POST" style="margin: 0;">
+                                            <input type="hidden" name="ip_address" value="<%= n.ip %>">
+                                            <button type="submit" style="background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid var(--danger); padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s;">
+                                                <i class="fas fa-ban"></i> IP-ni Bloklash (<%= n.ip %>)
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                </div>
                             </div>
                         </div>
                     <% }) %>
@@ -120,6 +133,7 @@
                         Yangi xavflar aniqlanmadi! Tizimingiz xavfsiz.
                     </div>
                 <% } %>
+
             </div>
         </div>
     </div>
