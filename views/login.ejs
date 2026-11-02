@@ -248,7 +248,18 @@
             localStorage.setItem('theme', theme);
             document.querySelector('.theme-toggle i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
-        function toggleTheme() { setTheme(localStorage.getItem('theme') === 'dark' ? 'light' : 'dark'); }
+        function toggleTheme() { 
+    let t = localStorage.getItem('theme') === 'dark' ? 'light' : 'dark'; 
+    document.documentElement.setAttribute('data-theme', t); 
+    localStorage.setItem('theme', t); 
+    
+    document.getElementById('themeIcon').className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon'; 
+    
+    // Rejim o'zgarganda zarrachalarni qayta chizish uchun:
+    const canvas = document.querySelector('.particles-js-canvas-el');
+    if (canvas) canvas.remove();
+    initParticles();
+}
         setTheme(localStorage.getItem('theme') || 'dark');
 
         // Socket.io Chat mantig'i
@@ -283,55 +294,69 @@
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
         // Animatsiya sozlamalari (Tarmoq uslubi)
-        function loadParticles(color) {
-            particlesJS("particles-js", {
-    "particles": {
-        "number": {
-            "value": 80, // Zarrachalar soni biroz ko'paytirildi
-            "density": { "enable": true, "value_area": 800 }
+        function initParticles() {
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    
+    // Rejimga qarab ranglarni tanlash
+    const particleColor = isDark ? '#38bdf8' : '#0284c7'; // Qora rejimda yorqin moviy, oq rejimda to'qroq moviy
+    const lineColor = isDark ? '#38bdf8' : '#94a3b8';     // Chiziqlar rangi
+
+    particlesJS("particles-js", {
+        "particles": {
+            "number": {
+                "value": 70,
+                "density": { "enable": true, "value_area": 800 }
+            },
+            "color": { "value": particleColor },
+            "shape": { 
+                "type": "polygon", // Shaklini poligon ko'rinishiga o'zgartiramiz
+                "stroke": { "width": 0, "color": "#000000" },
+                "polygon": { "nb_sides": 5 }
+            },
+            "opacity": {
+                "value": isDark ? 0.5 : 0.35,
+                "random": true
+            },
+            "size": {
+                "value": 4,
+                "random": true
+            },
+            "line_linked": {
+                "enable": true,
+                "distance": 140,
+                "color": lineColor,
+                "opacity": isDark ? 0.35 : 0.25,
+                "width": 1.2
+            },
+            "move": {
+                "enable": true,
+                "speed": 1.8,
+                "direction": "none",
+                "random": true,
+                "straight": false,
+                "out_mode": "out",
+                "bounce": false
+            }
         },
-        "color": { "value": "#38bdf8" }, // Neon moviy rang
-        "shape": { "type": "circle" },
-        "opacity": {
-            "value": 0.5, // Yorqinroq ko'rinishi uchun
-            "random": true
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": {
+                "onhover": { "enable": true, "mode": "bubble" }, // Sichqoncha borganikda pufakcha effekti (katrayish)
+                "onclick": { "enable": true, "mode": "repulse" }, // Bosganda tarqalib ketish effekti
+                "resize": true
+            },
+            "modes": {
+                "bubble": { "distance": 200, "size": 6, "duration": 2, "opacity": 0.8, "speed": 3 },
+                "repulse": { "distance": 150, "duration": 0.4 }
+            }
         },
-        "size": {
-            "value": 3,
-            "random": true
-        },
-        "line_linked": {
-            "enable": true,
-            "distance": 130,
-            "color": "#38bdf8",
-            "opacity": 0.35, // Chiziqlar yaxshiroq ko'rinadi
-            "width": 1.2
-        },
-        "move": {
-            "enable": true,
-            "speed": 2.2, // Harakat tezligi biroz jonlantirildi
-            "direction": "none",
-            "random": false,
-            "straight": false,
-            "out_mode": "out",
-            "bounce": false
-        }
-    },
-    "interactivity": {
-        "detect_on": "canvas",
-        "events": {
-            "onhover": { "enable": true, "mode": "grab" }, // Sichqoncha yaqinlashganda chiziqlar tortiladi
-            "onclick": { "enable": true, "mode": "push" }, // Bosganda yangi zarracha qo'shiladi
-            "resize": true
-        },
-        "modes": {
-            "grab": { "distance": 140, "line_linked": { "opacity": 0.8 } },
-            "push": { "particles_nb": 4 }
-        }
-    },
-    "retina_detect": true
-});
-        }
+        "retina_detect": true
+    });
+}
+
+// Sahifa ochilganda ishga tushirish
+initParticles();
+        
 
         // Mavzuga qarab animatsiya rangini almashtirish
         function updateParticlesColor() {
