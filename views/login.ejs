@@ -8,18 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230f172a' d='M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z'/><path fill='%23ef4444' d='M12 7c-1.1 0-2 .9-2 2v1H9v6h6v-6h-1V9c0-1.1-.9-2-2-2zm0 1.5c.28 0 .5.22.5.5v1h-1V9c0-.28.22-.5.5-.5z'/></svg>">
 <style>
-       :root { 
-    --bg-body: #0f172a; /* Oldingisidan ancha ochroq va boyroq (Slate) */
-    --bg-sidebar: #1e293b; 
-    --bg-header: #1e293b; 
-    --card-bg: #1e293b; 
-    --text-main: #f8fafc; 
-    --text-muted: #94a3b8; 
-    --accent: #38bdf8; /* Ochroq, yorqinroq moviy tus */
-    --danger: #f43f5e; 
-    --success: #34d399; 
-    --border-color: #334155; 
-}
+        :root { --primary: #f4f6f9; --secondary: #ffffff; --accent: #3b82f6; --text: #334155; --border: #e2e8f0; }
+        [data-theme="dark"] { --primary: #0a192f; --secondary: #112240; --accent: #64ffda; --text: #ccd6f6; --border: #64ffda; }
         
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--primary); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; transition: 0.3s;}
         
@@ -248,18 +238,7 @@
             localStorage.setItem('theme', theme);
             document.querySelector('.theme-toggle i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
-        function toggleTheme() { 
-    let t = localStorage.getItem('theme') === 'dark' ? 'light' : 'dark'; 
-    document.documentElement.setAttribute('data-theme', t); 
-    localStorage.setItem('theme', t); 
-    
-    document.getElementById('themeIcon').className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon'; 
-    
-    // Rejim o'zgarganda zarrachalarni qayta chizish uchun:
-    const canvas = document.querySelector('.particles-js-canvas-el');
-    if (canvas) canvas.remove();
-    initParticles();
-}
+        function toggleTheme() { setTheme(localStorage.getItem('theme') === 'dark' ? 'light' : 'dark'); }
         setTheme(localStorage.getItem('theme') || 'dark');
 
         // Socket.io Chat mantig'i
@@ -294,69 +273,25 @@
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
         // Animatsiya sozlamalari (Tarmoq uslubi)
-        function initParticles() {
-    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    
-    // Rejimga qarab ranglarni tanlash
-    const particleColor = isDark ? '#38bdf8' : '#0284c7'; // Qora rejimda yorqin moviy, oq rejimda to'qroq moviy
-    const lineColor = isDark ? '#38bdf8' : '#94a3b8';     // Chiziqlar rangi
-
-    particlesJS("particles-js", {
-        "particles": {
-            "number": {
-                "value": 70,
-                "density": { "enable": true, "value_area": 800 }
-            },
-            "color": { "value": particleColor },
-            "shape": { 
-                "type": "polygon", // Shaklini poligon ko'rinishiga o'zgartiramiz
-                "stroke": { "width": 0, "color": "#000000" },
-                "polygon": { "nb_sides": 5 }
-            },
-            "opacity": {
-                "value": isDark ? 0.5 : 0.35,
-                "random": true
-            },
-            "size": {
-                "value": 4,
-                "random": true
-            },
-            "line_linked": {
-                "enable": true,
-                "distance": 140,
-                "color": lineColor,
-                "opacity": isDark ? 0.35 : 0.25,
-                "width": 1.2
-            },
-            "move": {
-                "enable": true,
-                "speed": 1.8,
-                "direction": "none",
-                "random": true,
-                "straight": false,
-                "out_mode": "out",
-                "bounce": false
-            }
-        },
-        "interactivity": {
-            "detect_on": "canvas",
-            "events": {
-                "onhover": { "enable": true, "mode": "bubble" }, // Sichqoncha borganikda pufakcha effekti (katrayish)
-                "onclick": { "enable": true, "mode": "repulse" }, // Bosganda tarqalib ketish effekti
-                "resize": true
-            },
-            "modes": {
-                "bubble": { "distance": 200, "size": 6, "duration": 2, "opacity": 0.8, "speed": 3 },
-                "repulse": { "distance": 150, "duration": 0.4 }
-            }
-        },
-        "retina_detect": true
-    });
-}
-
-// Sahifa ochilganda ishga tushirish
-initParticles();
-        
+        function loadParticles(color) {
+            particlesJS("particles-js", {
+                "particles": {
+                    "number": { "value": window.innerWidth < 600 ? 30 : 80, "density": { "enable": true, "value_area": 800 } }, // Telefonda zarralar soni kamayadi
+                    "color": { "value": color },
+                    "shape": { "type": "circle" },
+                    "opacity": { "value": 0.5, "random": false },
+                    "size": { "value": 3, "random": true },
+                    "line_linked": { "enable": true, "distance": 150, "color": color, "opacity": 0.4, "width": 1 },
+                    "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+                    "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 } }, "push": { "particles_nb": 4 } }
+                },
+                "retina_detect": true
+            });
+        }
 
         // Mavzuga qarab animatsiya rangini almashtirish
         function updateParticlesColor() {
