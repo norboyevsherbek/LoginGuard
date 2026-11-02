@@ -13,7 +13,7 @@
         body { margin: 0; font-family: sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
         
         /* KOMPYUTER EKRANI UCHUN MENYU (YON PANEL) */
-        .sidebar { width: 260px; background-color: var(--bg-sidebar) !important; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; flex-shrink: 0; }
+        .sidebar { width: 260px; background-color: var(--bg-sidebar) !important; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: 0.3s; z-index: 99999 !important; flex-shrink: 0; }
         .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); }
         .sidebar-header i { color: var(--danger); }
         .nav-menu { display: flex; flex-direction: column; margin-top: 20px; }
@@ -85,7 +85,7 @@
                 height: 100vh !important;
                 background-color: var(--bg-sidebar) !important;
                 transition: all 0.3s ease !important;
-                z-index: 10000 !important;
+                z-index: 99999 !important;
                 box-shadow: -5px 0 15px rgba(0,0,0,0.5);
                 border-right: none;
             }
